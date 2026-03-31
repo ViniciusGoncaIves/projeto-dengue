@@ -1,19 +1,26 @@
-const db = require('../configs');
+const db = require("../configs");
 
 async function GetUsuario() {
-  const sql = `SELECT USUARIO.idusuario,
+    const sql = `SELECT USUARIO.idusuario,
                       USUARIO.nome,
 	                  USUARIO.email,
 	                  USUARIO.tipo,
 	                  USUARIO.data_cadastro
                FROM USUARIO`;
 
-  const queryResult = await db.query(sql);
-  return queryResult.rows;
+    const queryResult = await db.query(sql);
+    return queryResult.rows;
+}
+
+async function GetUsuarioLogin(email) {
+    const sql = "SELECT idusuario, email, senha FROM usuario WHERE email = $1";
+
+    const queryResult = await db.query(sql, [email]);
+    return queryResult.rows[0];
 }
 
 async function GetUsuarioById(id) {
-  const sql = `SELECT USUARIO.idusuario,
+    const sql = `SELECT USUARIO.idusuario,
                       USUARIO.nome,
                       USUARIO.email,
                       USUARIO.tipo,
@@ -21,35 +28,36 @@ async function GetUsuarioById(id) {
                FROM USUARIO
                WHERE USUARIO.idusuario = $1`;
 
-  const values = [id];
+    const values = [id];
 
-  const queryResult = await db.query(sql, values);
-  return queryResult.rows[0];
+    const queryResult = await db.query(sql, values);
+    return queryResult.rows[0];
 }
-    
+
 async function DeleteUsuario(id) {
-  const sql = `DELETE FROM USUARIO WHERE USUARIO.idusuario = $1`;
+    const sql = `DELETE FROM USUARIO WHERE USUARIO.idusuario = $1`;
 
-  const values = [id];
+    const values = [id];
 
-  const queryResult = await db.query(sql, values);
-  return queryResult.rows;
+    const queryResult = await db.query(sql, values);
+    return queryResult.rows;
 }
 
 async function PostUsuario(params) {
-  const sql = `INSERT INTO USUARIO (nome, email, senha, tipo)
+    const sql = `INSERT INTO USUARIO (nome, email, senha, tipo)
                VALUES ($1, $2, $3, $4) RETURNING *`;
-  
-  const { nome, email, senha, tipo } = params;
-  const values = [nome, email, senha, tipo];
-  
-  const queryResult = await db.query(sql, values);
-  return queryResult.rows[0];
+
+    const { nome, email, senha, tipo } = params;
+    const values = [nome, email, senha, tipo];
+
+    const queryResult = await db.query(sql, values);
+    return queryResult.rows[0];
 }
 
 module.exports = {
-  GetUsuario,
-  GetUsuarioById,
-  DeleteUsuario,
-  PostUsuario
-}
+    GetUsuario,
+    GetUsuarioLogin,
+    GetUsuarioById,
+    DeleteUsuario,
+    PostUsuario,
+};
