@@ -7,7 +7,7 @@ const usuarioService = require("../services/usuario");
  * @param {import("express").Response} res
  * @param {import("express").NextFunction} next
  */
-function authenticate(req, res, next) {
+async function authenticate(req, res, next) {
     try {
         const token = req.headers["authorization"]?.split(" ")[1];
         if (!token) {
@@ -15,7 +15,7 @@ function authenticate(req, res, next) {
         }
 
         const userId = authService.verifyToken(token);
-        const usuario = usuarioService.GetUsuarioById(userId);
+        const usuario = await usuarioService.GetUsuarioById(userId);
         req.user = usuario;
 
         next();
