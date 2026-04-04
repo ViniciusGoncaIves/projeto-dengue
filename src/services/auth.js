@@ -29,7 +29,13 @@ function verifyToken(token) {
  * @param {string} password - A senha para encriptar
  */
 function hashPassword(password) {
-    return bcrypt.hash(password, process.env.SALT_ROUNDS);
+    const saltRounds = Number(process.env.SALT_ROUNDS);
+
+    if (!Number.isInteger(saltRounds) || saltRounds <= 0) {
+        throw new Error("SALT_ROUNDS deve ser um número inteiro positivo");
+    }
+
+    return bcrypt.hash(password, saltRounds);
 }
 
 /**

@@ -76,7 +76,7 @@ async function PostUsuario(req, res) {
             });
         }
 
-        const senhaEncriptada = authService.hashPassword(senha);
+        const senhaEncriptada = await authService.hashPassword(senha);
         const usuario = await usuarioService.PostUsuario({
             nome,
             email,

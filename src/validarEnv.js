@@ -9,6 +9,7 @@ function validarEnv() {
         "POSTGRES_PASS",
         "POSTGRES_PORT",
         "JWT_SECRET",
+        "SALT_ROUNDS",
     ];
 
     for (const key of keys) {
@@ -18,6 +19,12 @@ function validarEnv() {
             );
             process.exit(1);
         }
+    }
+
+    const saltRounds = Number(process.env.SALT_ROUNDS);
+    if (!Number.isInteger(saltRounds) || saltRounds <= 0) {
+        console.error("Variavel SALT_ROUNDS deve ser um numero inteiro positivo");
+        process.exit(1);
     }
 }
 

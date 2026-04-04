@@ -12,7 +12,7 @@ async function PostLogin(req, res) {
 
     const usuario = await usuarioService.GetUsuarioLogin(email);
     if (!usuario) {
-        res.status(401).json({ error: "Credenciais inválidas" });
+        return res.status(401).json({ error: "Credenciais inválidas" });
     }
     const senhaCorreta = await authService.verifyPassword(senha, usuario.senha);
 
