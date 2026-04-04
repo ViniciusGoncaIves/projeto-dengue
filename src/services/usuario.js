@@ -54,10 +54,27 @@ async function PostUsuario(params) {
     return queryResult.rows[0];
 }
 
+async function PutUsuario(id, params) {
+    const sql = `UPDATE USUARIO
+                 SET nome = $2,
+                     email = $3,
+                     senha = COALESCE($4, senha),
+                     tipo = $5
+                 WHERE USUARIO.idusuario = $1
+                 RETURNING idusuario, nome, email, tipo, data_cadastro`;
+
+    const { nome, email, senha, tipo } = params;
+    const values = [id, nome, email, senha || null, tipo];
+
+    const queryResult = await db.query(sql, values);
+    return queryResult.rows[0];
+}
+
 module.exports = {
     GetUsuario,
     GetUsuarioLogin,
     GetUsuarioById,
     DeleteUsuario,
     PostUsuario,
+    PutUsuario,
 };

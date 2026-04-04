@@ -98,9 +98,50 @@ async function PostUsuario(req, res) {
     }
 }
 
+async function PutUsuario(req, res) {
+    const { id } = req.params;
+
+    try {
+        const { nome, email, senha, tipo } = req.body;
+
+        const usuarioExistente = await usuarioService.GetUsuarioById(id);
+        if (!usuarioExistente) {
+            return res.status(404).json({
+                status: "error",
+                message: "Usuário não encontrado",
+            });
+        }
+
+        let senhaEncriptada = null;
+        if (senha) {
+            senhaEncriptada = await authService.hashPassword(senha);
+        }
+
+        const usuario = await usuarioService.PutUsuario(id, {
+            nome,
+            email,
+            senha: senhaEncriptada,
+            tipo,
+        });
+
+        return res.status(200).json({
+            status: "ok",
+            message: "Usuário atualizado com sucesso",
+            data: usuario,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            status: "error",
+            message: "Erro do servidor",
+            error: error.message,
+        });
+    }
+}
+
 module.exports = {
     GetUsuario,
     GetUsuarioById,
     DeleteUsuarios,
     PostUsuario,
+    PutUsuario,
 };

@@ -6,4 +6,5 @@ module.exports = (app) => {
     app.get("/usuario/:id", authMiddleware, controller.GetUsuarioById);
     app.delete("/usuario/:id", authMiddleware, controller.DeleteUsuarios);
     app.post("/usuario", controller.PostUsuario);
+    app.put("/usuario/:id", authMiddleware, controller.PutUsuario);
 };
