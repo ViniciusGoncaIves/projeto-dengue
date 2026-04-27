@@ -3,3 +3,4 @@ package-lock.json
 private/
 .env
 test.js
+public/

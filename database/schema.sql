@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS public.imagem_denuncia
 (
     idimagem_denuncia integer NOT NULL DEFAULT nextval('imagem_denuncia_idimagem_denuncia_seq'::regclass),
     denuncia_id integer,
-    arquivo_binario bytea NOT NULL,
+    path_arquivo text COLLATE pg_catalog."default" NOT NULL,
     CONSTRAINT imagem_denuncia_pkey PRIMARY KEY (idimagem_denuncia),
     CONSTRAINT imagem_denuncia_denuncia_id_fkey FOREIGN KEY (denuncia_id)
         REFERENCES public.denuncia (iddenuncia) MATCH SIMPLE
