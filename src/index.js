@@ -1,14 +1,17 @@
 require("./validarEnv.js")();
 const express = require("express");
 const app = express();
-const  multer   =  require ( 'multer' ) 
+const multer = require("multer");
 const db = require("./configs");
 const PORT = process.env.PORT;
+const { Router } = require("express");
 
 app.use(express.json({ limit: "50mb" }));
 
-const  upload  =  multer ({storage: multer.memoryStorage()})
+const upload = multer({ storage: multer.memoryStorage() });
+const router = new Router();
 require("./routers")(app, upload);
+app.use("/api", router);
 
 app.get("/", async (req, res) => {
     try {
