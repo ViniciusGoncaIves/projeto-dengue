@@ -67,9 +67,9 @@ async function DeleteUsuarios(req, res) {
 
 async function PostUsuario(req, res) {
     try {
-        const { nome, email, senha, tipo } = req.body;
+        const { nome, email, senha } = req.body;
 
-        if (!nome || !email || !senha || !tipo) {
+        if (!nome || !email || !senha) {
             return res.status(400).json({
                 status: "error",
                 message: "Campos obrigatórios faltando",
@@ -81,7 +81,7 @@ async function PostUsuario(req, res) {
             nome,
             email,
             senha: senhaEncriptada,
-            tipo,
+            tipo: "USER",
         });
 
         return res.status(201).json({
@@ -90,6 +90,7 @@ async function PostUsuario(req, res) {
             data: usuario,
         });
     } catch (error) {
+        console.log(error);
         return res.status(500).json({
             status: "error",
             message: "Erro do servidor",

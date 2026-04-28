@@ -1,6 +1,12 @@
 const authService = require("../services/auth");
 const usuarioService = require("../services/usuario");
 
+/**
+ *
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @returns
+ */
 async function PostLogin(req, res) {
     if (!req.body) {
         return res.status(400).json({ error: "Email ou senha não informados" });
@@ -21,7 +27,13 @@ async function PostLogin(req, res) {
     }
 
     const token = authService.generateToken(usuario.idusuario);
-    return res.status(200).json({ token });
+
+    res.cookie("auth_dengue", token, {
+        httpOnly: true,
+        sameSite: "strict",
+        secure: process.env.NODE_ENV === "production",
+    });
+    return res.status(200).json({ message: "Sucesso na autenticação" });
 }
 
 module.exports = {
