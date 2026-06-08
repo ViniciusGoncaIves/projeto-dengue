@@ -1,46 +1,55 @@
-const {createClient} =  require('@supabase/supabase-js') 
+const { createClient } = require('@supabase/supabase-js');
 const env = require('../configs/env');
 
-const supabase = createClient(env.bucket_url, env.bucket_key)
+const supabase = createClient(env.bucket_url, env.bucket_key);
 
 async function uploadFile(file) {
-  console.log('Arquivo recebido para upload:', file);
+    console.log('Arquivo recebido para upload:', file);
 
-  const { data, error } = await supabase.storage.from('dengue_arquivos').upload('/uploads/' + file.originalname, file.buffer)
-  if (error) {
-    console.error('Erro ao fazer upload do arquivo:', error);
-    return {
-      status: 'error',
-      message: 'Erro ao fazer upload do arquivo',
-      error: error.message,
+    const { data, error } = await supabase.storage
+        .from('dengue_arquivos')
+        .upload('/uploads/' + file.originalname, file.buffer);
+    if (error) {
+        console.error('Erro ao fazer upload do arquivo:', error);
+        return {
+            status: 'error',
+            message: 'Erro ao fazer upload do arquivo',
+            error: error.message,
+        };
+    } else {
+        const { data: publicData } = supabase.storage
+            .from('dengue_arquivos')
+            .getPublicUrl(data.path);
+
+        return {
+            status: 'success',
+            message: 'Arquivo enviado com sucesso',
+            data: {
+                path: data.path,
+                publicUrl: publicData.publicUrl,
+            },
+        };
     }
-  } else {
-    return {
-      status: 'success',
-      message: 'Arquivo enviado com sucesso',
-      data: data,
-    }
-  }
 }
 
 async function getFileUrl(filePath) {
-  const { data, error } = await supabase.storage.from('dengue_arquivos').getPublicUrl(filePath)
-  if (error) {
-    console.error('Erro ao obter URL do arquivo:', error);
-    return {
-      status: 'error',
-      message: 'Erro ao obter URL do arquivo',
-      error: error.message,
+    const { data, error } = await supabase.storage.from('dengue_arquivos').getPublicUrl(filePath);
+    if (error) {
+        console.error('Erro ao obter URL do arquivo:', error);
+        return {
+            status: 'error',
+            message: 'Erro ao obter URL do arquivo',
+            error: error.message,
+        };
+    } else {
+        return {
+            status: 'success',
+            message: 'URL do arquivo obtida com sucesso',
+            data: data,
+        };
     }
-  } else {
-    return {
-      status: 'success',
-      message: 'URL do arquivo obtida com sucesso',
-      data: data,
-    }
-  }
 }
 
 module.exports = {
-  uploadFile,
+    uploadFile,
 };

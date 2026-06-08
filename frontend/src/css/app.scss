@@ -1,1 +1,45 @@
-// app global css
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+:root {
+  --brand-orange: #ff5a1f;
+  --brand-orange-dark: #e84f1a;
+  --brand-ink: #0f172a;
+  --brand-ink-soft: #334155;
+  --brand-muted: #f6f1ed;
+  --brand-card: #ffffff;
+  --brand-line: #efe5de;
+  --brand-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+  --brand-radius: 18px;
+}
+
+body {
+  font-family: 'Manrope', sans-serif;
+  background: var(--brand-muted);
+  color: var(--brand-ink);
+}
+
+h1,
+h2,
+h3,
+h4,
+.font-display {
+  font-family: 'Space Grotesk', sans-serif;
+  color: var(--brand-ink);
+}
+
+.page-shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.section-title {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.card-soft {
+  background: var(--brand-card);
+  border-radius: var(--brand-radius);
+  box-shadow: var(--brand-shadow);
+}

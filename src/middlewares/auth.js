@@ -1,5 +1,5 @@
-const authService = require("../services/auth");
-const usuarioService = require("../services/usuario");
+const authService = require('../services/auth');
+const usuarioService = require('../services/usuario');
 
 /**
  * Função de autenticação.
@@ -9,18 +9,21 @@ const usuarioService = require("../services/usuario");
  */
 async function authenticate(req, res, next) {
     try {
-        const token = req.headers["authorization"]?.split(" ")[1];
+        const token = req.headers['authorization']?.split(' ')[1];
         if (!token) {
-            return res.status(401).json({ error: "Não autorizado" });
+            return res.status(401).json({ error: 'Não autorizado' });
         }
 
         const userId = authService.verifyToken(token);
         const usuario = await usuarioService.GetUsuarioById(userId);
+        if (!usuario) {
+            return res.status(401).json({ error: 'Não autorizado' });
+        }
         req.user = usuario;
 
         next();
     } catch (error) {
-        return res.status(401).json({ error: "Token Inválido ou expirado" });
+        return res.status(401).json({ error: 'Token Inválido ou expirado' });
     }
 }
 
