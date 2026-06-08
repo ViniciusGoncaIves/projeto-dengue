@@ -9,8 +9,14 @@
           </p>
         </div>
 
-        <q-form @submit.prevent="handleLogin" class="q-gutter-md">
-          <!-- Email Input -->
+        <q-banner v-if="infoMessage" class="bg-blue-1 text-blue-9 q-mb-md" rounded>
+          {{ infoMessage }}
+        </q-banner>
+        <q-banner v-if="errorMessage" class="bg-red-1 text-red-9 q-mb-md" rounded>
+          {{ errorMessage }}
+        </q-banner>
+
+        <q-form ref="formRef" @submit.prevent="handleLogin" class="q-gutter-md">
           <div>
             <label class="text-caption text-weight-medium text-dark">E-mail</label>
             <q-input
@@ -28,7 +34,6 @@
             />
           </div>
 
-          <!-- Password Input -->
           <div>
             <div class="row justify-between items-center q-mb-xs">
               <label class="text-caption text-weight-medium text-dark">Senha</label>
@@ -50,7 +55,6 @@
             />
           </div>
 
-          <!-- Submit Button -->
           <q-btn
             type="submit"
             unelevated
@@ -59,15 +63,14 @@
             label="Entrar"
             icon-right="arrow_forward"
             class="full-width text-white text-weight-bold q-mt-md"
+            :loading="loading"
           />
         </q-form>
 
-        <!-- Divider -->
         <div class="text-center q-my-lg">
           <span class="text-caption text-grey-7">OU</span>
         </div>
 
-        <!-- Register Link -->
         <div class="text-center">
           <span class="text-caption text-grey-7">
             Ainda não tem uma conta?
@@ -78,7 +81,6 @@
         </div>
       </div>
 
-      <!-- Footer Links -->
       <div class="footer-links text-center q-mt-lg">
         <a href="#" class="text-caption text-grey-6">Termos de Uso</a>
         <span class="text-grey-6">·</span>
@@ -91,10 +93,14 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { http, setAuthToken } from 'src/boot/apiFetch'
+import { ref, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 
 const router = useRouter()
+const route = useRoute()
+
+const formRef = ref(null)
 
 const form = ref({
   email: '',
@@ -102,17 +108,46 @@ const form = ref({
 })
 
 const showPassword = ref(false)
+const loading = ref(false)
+const errorMessage = ref('')
+const infoMessage = ref('')
 
 const handleLogin = async () => {
-  // TODO: Implementar a funcionalidade de login
-  console.log('Dados de login:', {
-    email: form.value.email,
-    password: form.value.password,
-  })
-  // TODO: Fazer chamada à API para autenticar usuário
-  // TODO: Armazenar token JWT
-  // TODO: Redirecionar para o dashboard
+  errorMessage.value = ''
+
+  const isValid = await formRef.value?.validate()
+  if (!isValid) return
+
+  loading.value = true
+  try {
+    const data = await http.post('/api/auth/login', {
+      email: form.value.email,
+      senha: form.value.password,
+    })
+
+    if (!data?.token) {
+      throw new Error('Resposta inválida do servidor')
+    }
+
+    setAuthToken(data.token)
+    const redirectTo =
+      typeof route.query.redirect === 'string' ? route.query.redirect : '/dashboard'
+    router.push(redirectTo)
+  } catch (err) {
+    errorMessage.value = err?.message || 'Erro ao autenticar'
+  } finally {
+    loading.value = false
+  }
 }
+
+onMounted(() => {
+  if (route.query.registered === '1') {
+    infoMessage.value = 'Conta criada com sucesso. Faça login para continuar.'
+    const nextQuery = { ...route.query }
+    delete nextQuery.registered
+    router.replace({ query: nextQuery })
+  }
+})
 </script>
 
 <style scoped>

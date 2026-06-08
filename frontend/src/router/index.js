@@ -6,6 +6,7 @@ import {
   createWebHashHistory,
 } from 'vue-router'
 import routes from './routes'
+import { getAuthToken } from 'src/boot/apiFetch'
 
 /*
  * If not building with SSR mode, you can
@@ -31,6 +32,15 @@ export default defineRouter((/* { store, ssrContext } */) => {
     // quasar.conf.js -> build -> vueRouterMode
     // quasar.conf.js -> build -> publicPath
     history: createHistory(process.env.VUE_ROUTER_BASE),
+  })
+
+  Router.beforeEach((to, from, next) => {
+    const requiresAuth = to.matched.some((record) => record.meta.requiresAuth)
+    if (requiresAuth && !getAuthToken()) {
+      next({ path: '/login', query: { redirect: to.fullPath } })
+      return
+    }
+    next()
   })
 
   return Router

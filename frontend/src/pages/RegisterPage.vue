@@ -9,7 +9,11 @@
           </p>
         </div>
 
-        <q-form @submit.prevent="handleRegister" class="q-gutter-md">
+        <q-banner v-if="errorMessage" class="bg-red-1 text-red-9 q-mb-md" rounded>
+          {{ errorMessage }}
+        </q-banner>
+
+        <q-form ref="formRef" @submit.prevent="handleRegister" class="q-gutter-md">
           <div>
             <label class="text-caption text-weight-medium text-dark">Nome Completo</label>
             <q-input
@@ -103,6 +107,7 @@
             label="Criar Conta"
             class="full-width text-white text-weight-bold"
             :disable="!form.acceptTerms"
+            :loading="loading"
           />
         </q-form>
 
@@ -122,8 +127,11 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { http } from 'src/boot/apiFetch'
 
 const router = useRouter()
+
+const formRef = ref(null)
 
 const form = ref({
   fullName: '',
@@ -135,25 +143,30 @@ const form = ref({
 
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
+const loading = ref(false)
+const errorMessage = ref('')
 
 const handleRegister = async () => {
-  fetch('/api/usuario', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
+  errorMessage.value = ''
+
+  const isValid = await formRef.value?.validate()
+  if (!isValid) return
+  if (!form.value.acceptTerms) return
+
+  loading.value = true
+  try {
+    await http.post('/api/usuario', {
       nome: form.value.fullName,
       email: form.value.email,
       senha: form.value.password,
-    }),
-  })
-    .then((res) => {
-      if (res.ok) {
-        router.push('/')
-      }
     })
-    .catch((err) => console.log(err))
+
+    router.push({ path: '/login', query: { registered: '1' } })
+  } catch (err) {
+    errorMessage.value = err?.message || 'Erro ao criar conta'
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 

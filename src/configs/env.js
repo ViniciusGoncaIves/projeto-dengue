@@ -1,9 +1,7 @@
 const path = require('path');
-require('dotenv').config({
-  path: path.resolve(__dirname, '../../.env')
-});
+require('dotenv').config({});
 
 module.exports = {
-  bucket_url: process.env.BUCKET_URL,
-  bucket_key : process.env.BUCKET_KEY,
+    bucket_url: process.env.BUCKET_URL,
+    bucket_key: process.env.BUCKET_KEY,
 };

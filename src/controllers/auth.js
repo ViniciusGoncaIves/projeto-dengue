@@ -1,5 +1,5 @@
-const authService = require("../services/auth");
-const usuarioService = require("../services/usuario");
+const authService = require('../services/auth');
+const usuarioService = require('../services/usuario');
 
 /**
  *
@@ -9,33 +9,52 @@ const usuarioService = require("../services/usuario");
  */
 async function PostLogin(req, res) {
     if (!req.body) {
-        return res.status(400).json({ error: "Email ou senha não informados" });
+        return res.status(400).json({ error: 'Email ou senha não informados' });
     }
     const { email, senha } = req.body;
     if (!email || !senha) {
-        return res.status(400).json({ error: "Email ou senha não informados" });
+        return res.status(400).json({ error: 'Email ou senha não informados' });
     }
 
     const usuario = await usuarioService.GetUsuarioLogin(email);
     if (!usuario) {
-        return res.status(401).json({ error: "Credenciais inválidas" });
+        return res.status(401).json({ error: 'Credenciais inválidas' });
     }
     const senhaCorreta = await authService.verifyPassword(senha, usuario.senha);
 
     if (!senhaCorreta) {
-        return res.status(401).json({ error: "Credenciais inválidas" });
+        return res.status(401).json({ error: 'Credenciais inválidas' });
     }
 
     const token = authService.generateToken(usuario.idusuario);
 
-    res.cookie("auth_dengue", token, {
+    res.cookie('auth_dengue', token, {
         httpOnly: true,
-        sameSite: "strict",
-        secure: process.env.NODE_ENV === "production",
+        sameSite: 'strict',
+        secure: process.env.NODE_ENV === 'production',
     });
-    return res.status(200).json({ message: "Sucesso na autenticação" });
+    return res.status(200).json({
+        message: 'Sucesso na autenticação',
+        token,
+        user: {
+            id: usuario.idusuario,
+            email: usuario.email,
+        },
+    });
+}
+
+async function GetMe(req, res) {
+    if (!req.user) {
+        return res.status(401).json({ error: 'Não autorizado' });
+    }
+
+    return res.status(200).json({
+        status: 'ok',
+        data: req.user,
+    });
 }
 
 module.exports = {
     PostLogin,
+    GetMe,
 };

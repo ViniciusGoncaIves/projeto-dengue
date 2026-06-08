@@ -1,17 +1,17 @@
-const usuarioService = require("../services/usuario");
-const authService = require("../services/auth");
+const usuarioService = require('../services/usuario');
+const authService = require('../services/auth');
 
 async function GetUsuario(req, res) {
     try {
         const usuarios = await usuarioService.GetUsuario();
         return res.status(200).json({
-            status: "ok",
+            status: 'ok',
             data: usuarios,
         });
     } catch (error) {
         return res.status(500).json({
-            status: "error",
-            message: "Erro do servidor",
+            status: 'error',
+            message: 'Erro do servidor',
             error: error.message,
         });
     }
@@ -23,18 +23,18 @@ async function GetUsuarioById(req, res) {
         const usuario = await usuarioService.GetUsuarioById(id);
         if (!usuario) {
             return res.status(404).json({
-                status: "error",
-                message: "Usuário não encontrado",
+                status: 'error',
+                message: 'Usuário não encontrado',
             });
         }
         return res.status(200).json({
-            status: "ok",
+            status: 'ok',
             data: usuario,
         });
     } catch (error) {
         return res.status(500).json({
-            status: "error",
-            message: "Erro do servidor",
+            status: 'error',
+            message: 'Erro do servidor',
             error: error.message,
         });
     }
@@ -46,20 +46,20 @@ async function DeleteUsuarios(req, res) {
         const result = await usuarioService.GetUsuarioById(id);
         if (!result) {
             return res.status(404).json({
-                status: "error",
-                message: "Usuário não encontrado",
+                status: 'error',
+                message: 'Usuário não encontrado',
             });
         }
         await usuarioService.DeleteUsuario(id);
         return res.status(200).json({
-            status: "ok",
-            message: "Usuário deletado com sucesso",
+            status: 'ok',
+            message: 'Usuário deletado com sucesso',
             data: result,
         });
     } catch (error) {
         return res.status(500).json({
-            status: "error",
-            message: "Erro do servidor",
+            status: 'error',
+            message: 'Erro do servidor',
             error: error.message,
         });
     }
@@ -71,8 +71,16 @@ async function PostUsuario(req, res) {
 
         if (!nome || !email || !senha) {
             return res.status(400).json({
-                status: "error",
-                message: "Campos obrigatórios faltando",
+                status: 'error',
+                message: 'Campos obrigatórios faltando',
+            });
+        }
+
+        const usuarioExistente = await usuarioService.GetUsuarioLogin(email);
+        if (usuarioExistente) {
+            return res.status(409).json({
+                status: 'error',
+                message: 'E-mail já cadastrado',
             });
         }
 
@@ -81,19 +89,19 @@ async function PostUsuario(req, res) {
             nome,
             email,
             senha: senhaEncriptada,
-            tipo: "USER",
+            tipo: 'USER',
         });
 
         return res.status(201).json({
-            status: "ok",
-            message: "Usuário cadastrado com sucesso",
+            status: 'ok',
+            message: 'Usuário cadastrado com sucesso',
             data: usuario,
         });
     } catch (error) {
         console.log(error);
         return res.status(500).json({
-            status: "error",
-            message: "Erro do servidor",
+            status: 'error',
+            message: 'Erro do servidor',
             error: error.message,
         });
     }
@@ -108,8 +116,8 @@ async function PutUsuario(req, res) {
         const usuarioExistente = await usuarioService.GetUsuarioById(id);
         if (!usuarioExistente) {
             return res.status(404).json({
-                status: "error",
-                message: "Usuário não encontrado",
+                status: 'error',
+                message: 'Usuário não encontrado',
             });
         }
 
@@ -126,14 +134,14 @@ async function PutUsuario(req, res) {
         });
 
         return res.status(200).json({
-            status: "ok",
-            message: "Usuário atualizado com sucesso",
+            status: 'ok',
+            message: 'Usuário atualizado com sucesso',
             data: usuario,
         });
     } catch (error) {
         return res.status(500).json({
-            status: "error",
-            message: "Erro do servidor",
+            status: 'error',
+            message: 'Erro do servidor',
             error: error.message,
         });
     }

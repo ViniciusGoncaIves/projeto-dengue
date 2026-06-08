@@ -1,10 +1,14 @@
-const controller = require("../controllers/denuncia");
-const authMiddleware = require("../middlewares/auth");
+const controller = require('../controllers/denuncia');
+const authMiddleware = require('../middlewares/auth');
 
 module.exports = (app) => {
-	app.get("/denuncia", authMiddleware, controller.GetDenuncia);
-	app.get("/denuncia/:id", authMiddleware, controller.GetDenunciaById);
-	app.post("/denuncia", controller.PostDenuncia);
-	app.put("/denuncia/:id", authMiddleware, controller.PutDenuncia);
-	app.delete("/denuncia/:id", authMiddleware, controller.DeleteDenuncia);
-}
+    app.get('/denuncia/public', controller.GetDenunciaPublic);
+    app.get('/denuncia/public-stats', controller.GetDenunciaPublicStats);
+    app.get('/denuncia', authMiddleware, controller.GetDenuncia);
+    app.get('/denuncia/stats', authMiddleware, controller.GetDenunciaStats);
+    app.get('/denuncia/:id', authMiddleware, controller.GetDenunciaById);
+    app.post('/denuncia', controller.PostDenuncia);
+    app.patch('/denuncia/:id/status', authMiddleware, controller.PatchDenunciaStatus);
+    app.put('/denuncia/:id', authMiddleware, controller.PutDenuncia);
+    app.delete('/denuncia/:id', authMiddleware, controller.DeleteDenuncia);
+};
