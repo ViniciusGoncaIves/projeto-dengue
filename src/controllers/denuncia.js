@@ -1,6 +1,7 @@
 const denunciaService = require('../services/denuncia');
 const authService = require('../services/auth');
 const usuarioService = require('../services/usuario');
+const fileService = require('../services/files');
 
 async function GetDenuncia(req, res) {
     try {
@@ -60,7 +61,7 @@ async function GetDenunciaById(req, res) {
 
 async function PostDenuncia(req, res) {
     try {
-        const { descricao, latitude, longitude, endereco, imagens, anonimo } = req.body;
+        const { descricao, latitude, longitude, endereco, anonimo } = req.body;
         let idUsuario = null;
 
         if (!anonimo) {
@@ -95,8 +96,15 @@ async function PostDenuncia(req, res) {
             endereco,
         });
 
-        const imagensLista = Array.isArray(imagens) ? imagens : imagens ? [imagens] : [];
-        await denunciaService.AddDenunciaImagens(denuncia.iddenuncia, imagensLista);
+        const arquivos = req.files || [];
+        const paths = [];
+        for (const arquivo of arquivos) {
+            const resultado = await fileService.uploadFile(arquivo);
+            if (resultado.status === 'success') {
+                paths.push(resultado.data.publicUrl);
+            }
+        }
+        await denunciaService.AddDenunciaImagens(denuncia.iddenuncia, paths);
 
         return res.status(201).json({
             status: 'ok',

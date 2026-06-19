@@ -5,7 +5,7 @@ const filesRoute = require("./files");
 
 module.exports = (app, upload) => {
     usuarioRoute(app);
-    denunciaRoute(app);
+    denunciaRoute(app, upload);
     authRoute(app);
     filesRoute(app, upload);
 };
