@@ -4,7 +4,12 @@ const env = require('../configs/env');
 const supabase = createClient(env.bucket_url, env.bucket_key);
 
 async function uploadFile(file) {
-    console.log('Arquivo recebido para upload:', file);
+    if (!file) {
+        return {
+            status: 'error',
+            message: 'Arquivo não informado',
+        };
+    }
 
     const { data, error } = await supabase.storage
         .from('dengue_arquivos')

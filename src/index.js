@@ -6,6 +6,8 @@ const db = require('./configs');
 const PORT = process.env.PORT;
 const { Router } = require('express');
 const cors = require('cors');
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./docs/swagger-output.json');
 
 app.use(cors({}));
 app.use(express.json({ limit: '50mb' }));
@@ -14,6 +16,8 @@ const upload = multer({ storage: multer.memoryStorage() });
 const router = new Router();
 require('./routers')(router, upload);
 app.use('/api', router);
+app.get('/api/docs.json', (req, res) => res.json(swaggerDocument));
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.get('/', async (req, res) => {
     try {
