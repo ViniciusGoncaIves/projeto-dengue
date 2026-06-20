@@ -3,3 +3,5 @@ private/
 .env
 test.js
 public/
+.claude/
+.harness-mem/
