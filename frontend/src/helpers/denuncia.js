@@ -34,5 +34,5 @@ export function formatLocalizacao(denuncia) {
   if (denuncia?.latitude != null && denuncia?.longitude != null) {
     return `${Number(denuncia.latitude).toFixed(4)}, ${Number(denuncia.longitude).toFixed(4)}`
   }
-  return 'Localizacao nao informada'
+  return 'Localização não informada'
 }

@@ -6,54 +6,43 @@
           <div class="auth-brand-icon">
             <q-icon name="bug_report" size="20px" />
           </div>
-          <div class="auth-brand-title">Combate a Dengue</div>
+          <div>
+            <div class="auth-brand-title">Combate à Dengue</div>
+            <div class="auth-brand-subtitle">Registro comunitário de focos</div>
+          </div>
         </div>
 
         <nav class="auth-nav">
           <router-link class="auth-link" to="/dashboard" :class="isActive('/dashboard')">
-            Dashboard
+            Painel
           </router-link>
-          <router-link class="auth-link" to="/denuncias" :class="isActive('/denuncias')">
-            Denuncias
-          </router-link>
-          <router-link class="auth-link" to="/mapa" :class="isActive('/mapa')">
-            Mapa de Focos
-          </router-link>
-          <router-link class="auth-link" to="/relatorios" :class="isActive('/relatorios')">
-            Relatorios
+          <router-link class="auth-link" to="/report" :class="isActive('/report')">
+            Nova denúncia
           </router-link>
         </nav>
 
-        <q-space />
-
-        <q-input dense rounded outlined placeholder="Buscar denuncia..." class="auth-search">
-          <template #prepend>
-            <q-icon name="search" />
-          </template>
-        </q-input>
-
-        <q-btn flat round icon="notifications" class="q-ml-sm" />
-
-        <q-btn flat round class="q-ml-sm">
-          <q-avatar size="34px">
-            <img v-if="userAvatar" :src="userAvatar" alt="Usuario" />
-            <span v-else>{{ userInitials }}</span>
-          </q-avatar>
-          <q-menu anchor="bottom right" self="top right">
-            <q-list style="min-width: 180px">
-              <q-item>
-                <q-item-section>
-                  <div class="text-weight-bold">{{ userName || 'Usuario' }}</div>
-                  <div class="text-caption text-grey-6">{{ userEmail }}</div>
-                </q-item-section>
-              </q-item>
-              <q-separator />
-              <q-item clickable @click="handleLogout">
-                <q-item-section>Sair</q-item-section>
-              </q-item>
-            </q-list>
-          </q-menu>
-        </q-btn>
+        <div class="auth-actions">
+          <q-btn flat round>
+            <q-avatar size="34px">
+              <img v-if="userAvatar" :src="userAvatar" alt="Usuário" />
+              <span v-else>{{ userInitials }}</span>
+            </q-avatar>
+            <q-menu anchor="bottom right" self="top right">
+              <q-list style="min-width: 180px">
+                <q-item>
+                  <q-item-section>
+                    <div class="text-weight-bold">{{ userName || 'Usuário' }}</div>
+                    <div class="text-caption text-grey-6">{{ userEmail }}</div>
+                  </q-item-section>
+                </q-item>
+                <q-separator />
+                <q-item clickable @click="handleLogout">
+                  <q-item-section>Sair</q-item-section>
+                </q-item>
+              </q-list>
+            </q-menu>
+          </q-btn>
+        </div>
       </q-toolbar>
     </q-header>
 
@@ -103,7 +92,7 @@ const handleLogout = () => {
 }
 
 .auth-header {
-  background: #fff7f2;
+  background: var(--brand-panel);
   border-bottom: 1px solid var(--brand-line);
   color: var(--brand-ink);
 }
@@ -111,6 +100,9 @@ const handleLogout = () => {
 .auth-toolbar {
   min-height: 72px;
   gap: 18px;
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto minmax(220px, 1fr);
+  align-items: center;
 }
 
 .auth-brand {
@@ -123,7 +115,7 @@ const handleLogout = () => {
   width: 36px;
   height: 36px;
   border-radius: 12px;
-  background: rgba(255, 90, 31, 0.12);
+  background: var(--brand-orange-alpha-12);
   color: var(--brand-orange);
   display: grid;
   place-items: center;
@@ -134,11 +126,17 @@ const handleLogout = () => {
   font-size: 16px;
 }
 
+.auth-brand-subtitle {
+  font-size: 12px;
+  color: var(--brand-ink-soft);
+}
+
 .auth-nav {
   display: flex;
   gap: 18px;
   font-weight: 600;
   color: var(--brand-ink-soft);
+  justify-content: center;
 }
 
 .auth-link {
@@ -153,12 +151,14 @@ const handleLogout = () => {
   border-color: var(--brand-orange);
 }
 
-.auth-search {
-  min-width: 220px;
+.auth-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 @media (max-width: 1024px) {
   .auth-toolbar {
+    display: flex;
     flex-wrap: wrap;
   }
 
@@ -167,8 +167,8 @@ const handleLogout = () => {
     justify-content: center;
   }
 
-  .auth-search {
-    width: 100%;
+  .auth-actions {
+    margin-left: auto;
   }
 }
 </style>

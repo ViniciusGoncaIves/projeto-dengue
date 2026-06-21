@@ -53,6 +53,7 @@ module.exports = (app, upload) => {
     app.put(
         '/denuncia/:id',
         authMiddleware,
+        upload.array('imagens'),
         /*
             #swagger.tags = ['Denuncias']
             #swagger.security = [{ "bearerAuth": [] }]

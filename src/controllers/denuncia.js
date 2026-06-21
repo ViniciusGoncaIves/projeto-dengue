@@ -2,6 +2,7 @@ const denunciaService = require('../services/denuncia');
 const authService = require('../services/auth');
 const usuarioService = require('../services/usuario');
 const fileService = require('../services/files');
+const { logError } = require('../utils/logger');
 
 async function GetDenuncia(req, res) {
     try {
@@ -13,6 +14,12 @@ async function GetDenuncia(req, res) {
             ? Number(req.query.offset)
             : undefined;
         const status = req.query.status || undefined;
+        if (status && !denunciaService.isValidStatus(status)) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Status inválido',
+            });
+        }
 
         const denuncias = await denunciaService.GetDenuncia({
             userId: req.user?.idusuario,
@@ -26,6 +33,7 @@ async function GetDenuncia(req, res) {
             data: denuncias,
         });
     } catch (error) {
+        logError('GetDenuncia falhou', error, req);
         return res.status(500).json({
             status: 'error',
             message: 'Erro do servidor',
@@ -46,11 +54,21 @@ async function GetDenunciaById(req, res) {
             });
         }
 
+        const isAdmin = req.user?.tipo === 'ADMIN';
+        const isOwner = denuncia.usuario_id === req.user?.idusuario;
+        if (!isAdmin && !isOwner) {
+            return res.status(403).json({
+                status: 'error',
+                message: 'Acesso negado',
+            });
+        }
+
         return res.status(200).json({
             status: 'ok',
             data: denuncia,
         });
     } catch (error) {
+        logError('GetDenunciaById falhou', error, req);
         return res.status(500).json({
             status: 'error',
             message: 'Erro do servidor',
@@ -76,6 +94,7 @@ async function PostDenuncia(req, res) {
                     const usuario = await usuarioService.GetUsuarioById(userId);
                     idUsuario = usuario?.idusuario || null;
                 } catch (error) {
+                    logError('PostDenuncia falhou ao validar token opcional', error, req);
                     return res.status(401).json({ error: 'Token inválido' });
                 }
             }
@@ -112,6 +131,7 @@ async function PostDenuncia(req, res) {
             data: denuncia,
         });
     } catch (error) {
+        logError('PostDenuncia falhou', error, req);
         return res.status(500).json({
             status: 'error',
             message: 'Erro do servidor',
@@ -132,8 +152,21 @@ async function PutDenuncia(req, res) {
             });
         }
 
-        const { descricao, latitude, longitude, endereco, status, data_analise, motivo_rejeicao } =
-            req.body;
+        if (req.user?.tipo === 'ADMIN' || denunciaExistente.usuario_id !== req.user?.idusuario) {
+            return res.status(403).json({
+                status: 'error',
+                message: 'Somente o usuário responsável pode editar esta denúncia',
+            });
+        }
+
+        if (!['PENDENTE', 'REJEITADO'].includes(denunciaExistente.status)) {
+            return res.status(409).json({
+                status: 'error',
+                message: 'Denúncias aprovadas não podem ser editadas',
+            });
+        }
+
+        const { descricao, latitude, longitude, endereco } = req.body;
 
         if (!descricao || latitude == null || longitude == null) {
             return res.status(400).json({
@@ -147,10 +180,20 @@ async function PutDenuncia(req, res) {
             latitude,
             longitude,
             endereco,
-            status,
-            data_analise,
-            motivo_rejeicao,
+            status: 'PENDENTE',
+            data_analise: null,
+            motivo_rejeicao: null,
         });
+
+        const arquivos = req.files || [];
+        const paths = [];
+        for (const arquivo of arquivos) {
+            const resultado = await fileService.uploadFile(arquivo);
+            if (resultado.status === 'success') {
+                paths.push(resultado.data.publicUrl);
+            }
+        }
+        await denunciaService.AddDenunciaImagens(denuncia.iddenuncia, paths);
 
         return res.status(200).json({
             status: 'ok',
@@ -158,6 +201,7 @@ async function PutDenuncia(req, res) {
             data: denuncia,
         });
     } catch (error) {
+        logError('PutDenuncia falhou', error, req);
         return res.status(500).json({
             status: 'error',
             message: 'Erro do servidor',
@@ -185,6 +229,7 @@ async function DeleteDenuncia(req, res) {
             data: denuncia,
         });
     } catch (error) {
+        logError('DeleteDenuncia falhou', error, req);
         return res.status(500).json({
             status: 'error',
             message: 'Erro do servidor',
@@ -206,6 +251,7 @@ async function GetDenunciaStats(req, res) {
             data: stats,
         });
     } catch (error) {
+        logError('GetDenunciaStats falhou', error, req);
         return res.status(500).json({
             status: 'error',
             message: 'Erro do servidor',
@@ -220,19 +266,28 @@ async function GetDenunciaPublic(req, res) {
             ? Number(req.query.limit)
             : undefined;
         const status = req.query.status || undefined;
+        if (status && !denunciaService.isValidStatus(status)) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Status inválido',
+            });
+        }
 
         const denuncias = await denunciaService.GetDenuncia({
             status,
             limit,
         });
 
-        const data = denuncias.map(({ usuario_id, ...rest }) => rest);
+        const data = denuncias.map(
+            ({ usuario_id, usuario_nome, usuario_email, anonima, ...rest }) => rest,
+        );
 
         return res.status(200).json({
             status: 'ok',
             data,
         });
     } catch (error) {
+        logError('GetDenunciaPublic falhou', error, req);
         return res.status(500).json({
             status: 'error',
             message: 'Erro do servidor',
@@ -252,6 +307,7 @@ async function GetDenunciaPublicStats(req, res) {
             data: stats,
         });
     } catch (error) {
+        logError('GetDenunciaPublicStats falhou', error, req);
         return res.status(500).json({
             status: 'error',
             message: 'Erro do servidor',
@@ -268,6 +324,13 @@ async function PatchDenunciaStatus(req, res) {
         return res.status(400).json({
             status: 'error',
             message: 'Status é obrigatório',
+        });
+    }
+
+    if (!denunciaService.isValidStatus(status)) {
+        return res.status(400).json({
+            status: 'error',
+            message: 'Status inválido',
         });
     }
 
@@ -291,6 +354,7 @@ async function PatchDenunciaStatus(req, res) {
             data: denuncia,
         });
     } catch (error) {
+        logError('PatchDenunciaStatus falhou', error, req);
         return res.status(500).json({
             status: 'error',
             message: 'Erro do servidor',

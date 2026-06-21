@@ -2,14 +2,14 @@
   <q-page class="landing-page">
     <section class="hero page-shell">
       <div class="hero-content">
-        <div class="hero-chip">Alerta de saude publica</div>
+        <div class="hero-chip">Alerta de saúde pública</div>
         <h1 class="hero-title">Juntos contra a dengue</h1>
         <p class="hero-subtitle">
-          Dados em tempo real, reportes de focos e orientacoes para proteger sua comunidade.
+          Dados em tempo real, reportes de focos e orientações para proteger sua comunidade.
         </p>
         <div class="hero-actions">
           <q-btn color="primary" unelevated class="hero-btn" to="/report">Quero ajudar</q-btn>
-          <q-btn flat class="hero-btn-secondary" to="/prevention">Ver prevencao</q-btn>
+          <q-btn flat class="hero-btn-secondary" to="/prevention">Ver prevenção</q-btn>
         </div>
       </div>
       <div class="hero-visual">
@@ -37,7 +37,7 @@
           <q-btn flat color="primary" to="/report">Ver mapa</q-btn>
         </div>
         <div class="outbreak-map">
-          <div class="map-legend">Mapa de calor dinamico</div>
+          <div class="map-legend">Mapa de calor dinâmico</div>
           <div class="map-card">
             <div class="map-label">Hotspot atual</div>
             <div class="map-title">{{ hotspotTitle }}</div>
@@ -51,15 +51,15 @@
           <div class="hotline-icon">
             <q-icon name="local_hospital" size="22px" />
           </div>
-          <h3>Central de emergencia</h3>
+          <h3>Central de emergência</h3>
           <p>Atendimento imediato para sintomas graves.</p>
           <div class="hotline-number">0800 123 4567</div>
         </div>
 
         <div class="checklist-card">
-          <h3>Checklist de prevencao</h3>
+          <h3>Checklist de prevenção</h3>
           <ul>
-            <li>Eliminar agua parada</li>
+            <li>Eliminar água parada</li>
             <li>Usar repelente aprovado</li>
             <li>Instalar telas protetoras</li>
             <li>Manter calhas limpas</li>
@@ -99,10 +99,10 @@ const statCards = computed(() => {
   const ultimos30 = stats.value ? Number(stats.value.ultimos_30_dias) : null
 
   return [
-    { label: 'Total de denuncias', value: total ?? '-', foot: 'desde o inicio' },
-    { label: 'Pendentes', value: pendentes ?? '-', foot: 'aguardando analise' },
-    { label: 'Ultimos 30 dias', value: ultimos30 ?? '-', foot: 'novos registros' },
-    { label: 'Taxa de resolucao', value: taxaResolucao, foot: 'aprovadas + rejeitadas' },
+    { label: 'Total de denúncias', value: total ?? '-', foot: 'desde o início' },
+    { label: 'Pendentes', value: pendentes ?? '-', foot: 'aguardando análise' },
+    { label: 'Últimos 30 dias', value: ultimos30 ?? '-', foot: 'novos registros' },
+    { label: 'Taxa de resolução', value: taxaResolucao, foot: 'aprovadas + rejeitadas' },
   ]
 })
 
@@ -116,7 +116,7 @@ const hotspotDesc = computed(() => {
   const item = denuncias.value?.[0]
   if (!item) return 'Nenhum foco registrado no momento.'
   const parsed = parseDescricaoDenuncia(item?.descricao)
-  return parsed.detalhes || 'Monitoramento ativo para resposta rapida.'
+  return parsed.detalhes || 'Monitoramento ativo para resposta rápida.'
 })
 </script>
 
@@ -144,7 +144,7 @@ const hotspotDesc = computed(() => {
   gap: 8px;
   padding: 6px 14px;
   border-radius: 999px;
-  background: rgba(255, 90, 31, 0.15);
+  background: var(--brand-orange-alpha-15);
   color: var(--brand-orange);
   font-weight: 600;
   width: fit-content;
@@ -179,8 +179,8 @@ const hotspotDesc = computed(() => {
 
 .hero-visual {
   background:
-    radial-gradient(circle at top, rgba(255, 90, 31, 0.2), transparent 55%),
-    linear-gradient(120deg, #101828, #1f2937);
+    radial-gradient(circle at top, var(--brand-orange-alpha-20), transparent 55%),
+    linear-gradient(120deg, var(--brand-hero-dark-start), var(--brand-hero-dark-end));
   border-radius: 28px;
   min-height: 280px;
   position: relative;
@@ -194,8 +194,8 @@ const hotspotDesc = computed(() => {
   right: 24px;
   padding: 16px 18px;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
+  background: var(--brand-white-alpha-08);
+  color: var(--brand-card);
   backdrop-filter: blur(12px);
 }
 
@@ -203,7 +203,7 @@ const hotspotDesc = computed(() => {
   display: inline-flex;
   padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(255, 90, 31, 0.7);
+  background: var(--brand-orange-alpha-70);
   font-size: 12px;
   font-weight: 600;
 }
@@ -219,7 +219,7 @@ const hotspotDesc = computed(() => {
 }
 
 .stat-card {
-  background: #fff;
+  background: var(--brand-card);
   border-radius: 18px;
   padding: 18px;
   box-shadow: var(--brand-shadow);
@@ -239,7 +239,7 @@ const hotspotDesc = computed(() => {
 
 .stat-foot {
   font-size: 12px;
-  color: #64748b;
+  color: var(--brand-ink-muted);
 }
 
 .outbreak-section {
@@ -261,7 +261,7 @@ const hotspotDesc = computed(() => {
 }
 
 .outbreak-map {
-  background: linear-gradient(120deg, #fff, #ffe8db);
+  background: linear-gradient(120deg, var(--brand-card), var(--brand-map-warm));
   border-radius: 24px;
   padding: 22px;
   min-height: 260px;
@@ -271,8 +271,8 @@ const hotspotDesc = computed(() => {
 
 .map-legend {
   font-size: 12px;
-  color: #9a3412;
-  background: rgba(255, 90, 31, 0.1);
+  color: var(--brand-map-text);
+  background: var(--brand-orange-alpha-12);
   width: fit-content;
   padding: 4px 10px;
   border-radius: 999px;
@@ -283,7 +283,7 @@ const hotspotDesc = computed(() => {
   bottom: 24px;
   left: 24px;
   right: 24px;
-  background: #fff;
+  background: var(--brand-card);
   border-radius: 16px;
   padding: 14px 16px;
   box-shadow: var(--brand-shadow);
@@ -293,7 +293,7 @@ const hotspotDesc = computed(() => {
 
 .map-label {
   font-size: 12px;
-  color: #f97316;
+  color: var(--brand-map-label);
   font-weight: 600;
 }
 
@@ -314,7 +314,7 @@ const hotspotDesc = computed(() => {
 .hotline-card,
 .checklist-card,
 .education-card {
-  background: #fff;
+  background: var(--brand-card);
   border-radius: 20px;
   padding: 18px;
   box-shadow: var(--brand-shadow);
@@ -322,14 +322,14 @@ const hotspotDesc = computed(() => {
 
 .hotline-card {
   background: var(--brand-orange);
-  color: #fff;
+  color: var(--brand-card);
 }
 
 .hotline-icon {
   width: 36px;
   height: 36px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--brand-white-alpha-20);
   display: grid;
   place-items: center;
   margin-bottom: 10px;

@@ -1,5 +1,6 @@
 const usuarioService = require('../services/usuario');
 const authService = require('../services/auth');
+const { logError } = require('../utils/logger');
 
 async function GetUsuario(req, res) {
     try {
@@ -9,6 +10,7 @@ async function GetUsuario(req, res) {
             data: usuarios,
         });
     } catch (error) {
+        logError('GetUsuario falhou', error, req);
         return res.status(500).json({
             status: 'error',
             message: 'Erro do servidor',
@@ -32,6 +34,7 @@ async function GetUsuarioById(req, res) {
             data: usuario,
         });
     } catch (error) {
+        logError('GetUsuarioById falhou', error, req);
         return res.status(500).json({
             status: 'error',
             message: 'Erro do servidor',
@@ -57,6 +60,7 @@ async function DeleteUsuarios(req, res) {
             data: result,
         });
     } catch (error) {
+        logError('DeleteUsuarios falhou', error, req);
         return res.status(500).json({
             status: 'error',
             message: 'Erro do servidor',
@@ -98,7 +102,7 @@ async function PostUsuario(req, res) {
             data: usuario,
         });
     } catch (error) {
-        console.log(error);
+        logError('PostUsuario falhou', error, req);
         return res.status(500).json({
             status: 'error',
             message: 'Erro do servidor',
@@ -139,6 +143,7 @@ async function PutUsuario(req, res) {
             data: usuario,
         });
     } catch (error) {
+        logError('PutUsuario falhou', error, req);
         return res.status(500).json({
             status: 'error',
             message: 'Erro do servidor',

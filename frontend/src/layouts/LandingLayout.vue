@@ -7,8 +7,8 @@
             <q-icon name="health_and_safety" size="20px" />
           </div>
           <div>
-            <div class="brand-title">Dengue Combat</div>
-            <div class="brand-subtitle">Protecao em tempo real</div>
+            <div class="brand-title">Combate à Dengue</div>
+            <div class="brand-subtitle">Registro comunitário de focos</div>
           </div>
         </div>
 
@@ -25,30 +25,34 @@
         </nav>
 
         <div class="landing-actions">
-          <q-input
-            :class="{ 'is-hidden': !showSearch }"
-            v-model="search"
-            dense
-            rounded
-            outlined
-            :placeholder="headerConfig.searchPlaceholder"
-            class="landing-search"
-            :disable="!showSearch"
-          >
-            <template #prepend>
-              <q-icon name="search" />
-            </template>
-          </q-input>
-
           <q-btn
-            :class="{ 'is-hidden': !showAction }"
+            v-if="!isAuthenticated"
             v-bind="actionProps"
             unelevated
             color="primary"
             class="landing-cta"
-            :disable="!showAction"
           >
             {{ actionLabel }}
+          </q-btn>
+
+          <q-btn v-else flat round>
+            <q-avatar size="34px">
+              <span>{{ userInitials }}</span>
+            </q-avatar>
+            <q-menu anchor="bottom right" self="top right">
+              <q-list style="min-width: 180px">
+                <q-item>
+                  <q-item-section>
+                    <div class="text-weight-bold">{{ userName || 'Usuário' }}</div>
+                    <div class="text-caption text-grey-6">{{ userEmail }}</div>
+                  </q-item-section>
+                </q-item>
+                <q-separator />
+                <q-item clickable @click="handleLogout">
+                  <q-item-section>Sair</q-item-section>
+                </q-item>
+              </q-list>
+            </q-menu>
           </q-btn>
         </div>
       </q-toolbar>
@@ -59,36 +63,33 @@
         <div class="landing-view">
           <router-view />
         </div>
-        <footer class="landing-footer">
+        <footer v-if="!isAuthenticated" class="landing-footer">
           <div class="page-shell footer-grid">
             <div>
-              <div class="footer-brand">Dengue Combat</div>
+              <div class="footer-brand">Combate à Dengue</div>
               <p>
-                Portal publico para monitoramento e resposta a focos de dengue com dados
-                atualizados.
+                Projeto acadêmico para registro e acompanhamento de focos de dengue.
               </p>
             </div>
             <div>
-              <div class="footer-title">Recursos</div>
+              <div class="footer-title">Fluxo</div>
               <ul>
-                <li>Guia de prevencao</li>
-                <li>Mapa de focos</li>
-                <li>Central de apoio</li>
-                <li>Materiais oficiais</li>
+                <li>Denúncia pública ou identificada</li>
+                <li>Painel para usuários cadastrados</li>
+                <li>Análise administrativa</li>
               </ul>
             </div>
             <div>
-              <div class="footer-title">Contato</div>
+              <div class="footer-title">Status</div>
               <ul>
-                <li>contato@denguecombat.gov</li>
-                <li>0800 123 4567</li>
-                <li>Suporte 24h</li>
+                <li>Pendente</li>
+                <li>Aprovada</li>
+                <li>Rejeitada</li>
               </ul>
             </div>
           </div>
           <div class="page-shell footer-bottom">
-            <span>(c) 2024 Dengue Combat Initiative</span>
-            <span class="footer-links">Politica de privacidade - Termos</span>
+            <span>Projeto acadêmico</span>
           </div>
         </footer>
       </div>
@@ -97,41 +98,65 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { getAuthToken } from 'src/boot/apiFetch'
+import { useAuthStore } from 'src/stores/auth-store'
 
 const route = useRoute()
-const search = ref('')
+const router = useRouter()
+const authStore = useAuthStore()
 
-const navItems = [
-  { label: 'Inicio', to: '/' },
-  { label: 'Prevencao', to: '/prevention' },
-  { label: 'Emergencia', to: '/emergency' },
-  { label: 'Reportar foco', to: '/report' },
-]
-
-const headerConfig = computed(() => {
-  return (
-    route.meta?.landingHeader || {
-      searchPlaceholder: 'Buscar dados...',
-      action: { label: 'Reportar foco', to: '/report' },
-    }
-  )
+onMounted(() => {
+  if (isAuthenticated.value) {
+    authStore.fetchMe()
+  }
 })
 
-const showSearch = computed(() => !!headerConfig.value.searchPlaceholder)
-const showAction = computed(() => !!headerConfig.value.action)
+const isAuthenticated = computed(() => !!getAuthToken())
+const navItems = computed(() =>
+  isAuthenticated.value
+    ? [
+        { label: 'Painel', to: '/dashboard' },
+        { label: 'Nova denúncia', to: '/report' },
+      ]
+    : [
+        { label: 'Início', to: '/' },
+        { label: 'Registrar denúncia', to: '/report' },
+      ],
+)
+
+const headerConfig = computed(() => {
+  return {
+    action: { label: 'Login', to: '/login' },
+  }
+})
 
 const actionProps = computed(() => {
-  const action = headerConfig.value.action
-  if (!action) return {}
-  if (action.href) {
-    return { href: action.href, target: '_blank', rel: 'noopener' }
+  const action = headerConfig.value.action || {
+    label: 'Login',
+    to: '/login',
   }
   return { to: action.to }
 })
 
 const actionLabel = computed(() => headerConfig.value.action?.label || '')
+const userName = computed(() => authStore.user?.nome || '')
+const userEmail = computed(() => authStore.user?.email || '')
+const userInitials = computed(() => {
+  const name = userName.value.trim()
+  if (!name) return 'U'
+  const parts = name.split(' ').filter(Boolean)
+  return parts
+    .slice(0, 2)
+    .map((part) => part[0].toUpperCase())
+    .join('')
+})
+
+const handleLogout = () => {
+  authStore.logout()
+  router.push('/login')
+}
 </script>
 
 <style scoped>
@@ -140,7 +165,7 @@ const actionLabel = computed(() => headerConfig.value.action?.label || '')
 }
 
 .landing-header {
-  background: #fff7f2;
+  background: var(--brand-panel);
   border-bottom: 1px solid var(--brand-line);
   color: var(--brand-ink);
 }
@@ -149,7 +174,7 @@ const actionLabel = computed(() => headerConfig.value.action?.label || '')
   min-height: 72px;
   gap: 18px;
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) auto minmax(260px, 1fr);
+  grid-template-columns: minmax(220px, 1fr) auto minmax(220px, 1fr);
   align-items: center;
 }
 
@@ -163,7 +188,7 @@ const actionLabel = computed(() => headerConfig.value.action?.label || '')
   width: 36px;
   height: 36px;
   border-radius: 12px;
-  background: rgba(255, 90, 31, 0.12);
+  background: var(--brand-orange-alpha-12);
   color: var(--brand-orange);
   display: grid;
   place-items: center;
@@ -181,7 +206,7 @@ const actionLabel = computed(() => headerConfig.value.action?.label || '')
 
 .landing-nav {
   display: flex;
-  gap: 20px;
+  gap: 18px;
   font-weight: 600;
   color: var(--brand-ink-soft);
   justify-content: center;
@@ -204,11 +229,6 @@ const actionLabel = computed(() => headerConfig.value.action?.label || '')
   align-items: center;
   gap: 12px;
   justify-content: flex-end;
-  min-width: 260px;
-}
-
-.landing-search {
-  min-width: 220px;
 }
 
 .landing-content {
@@ -221,11 +241,6 @@ const actionLabel = computed(() => headerConfig.value.action?.label || '')
   flex: 1 1 auto;
 }
 
-.is-hidden {
-  visibility: hidden;
-  pointer-events: none;
-}
-
 .landing-cta {
   border-radius: 999px;
   padding: 10px 18px;
@@ -234,8 +249,8 @@ const actionLabel = computed(() => headerConfig.value.action?.label || '')
 }
 
 .landing-footer {
-  background: #111827;
-  color: #e2e8f0;
+  background: var(--brand-footer);
+  color: var(--brand-footer-text);
   padding: 48px 0 28px;
 }
 
@@ -263,15 +278,15 @@ const actionLabel = computed(() => headerConfig.value.action?.label || '')
   margin: 0;
   display: grid;
   gap: 8px;
-  color: #cbd5f5;
+  color: var(--brand-footer-soft);
 }
 
 .footer-bottom {
   display: flex;
   justify-content: space-between;
   font-size: 12px;
-  color: #94a3b8;
-  border-top: 1px solid rgba(148, 163, 184, 0.2);
+  color: var(--brand-footer-muted);
+  border-top: 1px solid var(--brand-footer-line);
   padding-top: 16px;
 }
 
@@ -282,11 +297,13 @@ const actionLabel = computed(() => headerConfig.value.action?.label || '')
 
 @media (max-width: 900px) {
   .landing-toolbar {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-wrap: wrap;
     gap: 12px;
   }
 
   .landing-nav {
+    width: 100%;
     flex-wrap: wrap;
     justify-content: center;
   }

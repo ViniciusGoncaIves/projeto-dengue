@@ -51,8 +51,16 @@ export function useDenuncias() {
     }
   }
 
-  const createDenuncia = async (payload) => {
-    return http.post('/api/denuncia', payload)
+  const createDenuncia = async (payload, options = {}) => {
+    return http.post('/api/denuncia', payload, options)
+  }
+
+  const fetchDenunciaById = async (id) => {
+    return http.get(`/api/denuncia/${id}`)
+  }
+
+  const updateDenuncia = async (id, payload, options = {}) => {
+    return http.put(`/api/denuncia/${id}`, payload, options)
   }
 
   const updateStatus = async (id, status, motivo) => {
@@ -70,6 +78,8 @@ export function useDenuncias() {
     fetchDenuncias,
     fetchStats,
     createDenuncia,
+    fetchDenunciaById,
+    updateDenuncia,
     updateStatus,
     fetchPublicDenuncias,
     fetchPublicStats,

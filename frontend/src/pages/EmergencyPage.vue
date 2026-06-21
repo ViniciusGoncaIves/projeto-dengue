@@ -3,12 +3,11 @@
     <section class="page-shell hero">
       <div class="hero-content">
         <div class="hero-chip">Atendimento urgente</div>
-        <h1 class="hero-title">Emergencia medica e busca de hospitais</h1>
+        <h1 class="hero-title">Emergência médica e busca de hospitais</h1>
         <p class="hero-subtitle">
           Em casos graves como vomito persistente ou sangramentos, procure atendimento imediato.
         </p>
         <div class="hero-actions">
-          <q-btn color="primary" unelevated class="hero-btn">Encontrar hospital</q-btn>
           <q-btn outline class="hero-btn-secondary" href="tel:192">Ligar 192</q-btn>
         </div>
       </div>
@@ -16,7 +15,7 @@
     </section>
 
     <section class="page-shell hotlines">
-      <h2 class="section-title">Telefones de emergencia</h2>
+      <h2 class="section-title">Telefones de emergência</h2>
       <div class="hotline-grid">
         <div v-for="hotline in hotlines" :key="hotline.title" class="hotline-card">
           <div class="hotline-icon">
@@ -35,8 +34,7 @@
       <div class="centers-grid">
         <div class="center-list">
           <div class="center-header">
-            <h2 class="section-title">Centros proximos</h2>
-            <q-btn flat color="primary">Filtrar</q-btn>
+            <h2 class="section-title">Centros próximos</h2>
           </div>
           <div class="center-empty">
             <q-icon name="location_off" size="28px" />
@@ -46,13 +44,13 @@
         <div class="center-map">
           <h3>Mapa em tempo real</h3>
           <div class="map-placeholder">
-            <p>Ative a geolocalizacao para visualizar unidades proximas.</p>
+            <p>Ative a geolocalização para visualizar unidades proximas.</p>
           </div>
           <div class="map-tips">
             <h4>O que fazer enquanto espera</h4>
             <ol>
               <li>Mantenha-se hidratado.</li>
-              <li>Evite anti-inflamatorios sem orientacao.</li>
+              <li>Evite anti-inflamatorios sem orientação.</li>
               <li>Monitore temperatura e sinais de alerta.</li>
               <li>Procure ajuda se os sintomas piorarem.</li>
             </ol>
@@ -82,16 +80,16 @@ const hotlines = [
     title: 'SAMU',
     desc: 'Atendimento pre-hospitalar imediato.',
     number: '192',
-    icon: 'medical_services',
+    icon: 'médical_services',
   },
   {
     title: 'Disque Saude',
-    desc: 'Informacoes e orientacoes oficiais.',
+    desc: 'Informações e orientações oficiais.',
     number: '136',
     icon: 'support_agent',
   },
   {
-    title: 'Suporte Dengue',
+    title: 'Canal Dengue',
     desc: 'Canal especializado para pacientes.',
     number: '0800-DENGUE',
     icon: 'health_and_safety',
@@ -123,7 +121,7 @@ const warnings = [
   display: inline-flex;
   padding: 6px 14px;
   border-radius: 999px;
-  background: rgba(255, 90, 31, 0.15);
+  background: var(--brand-orange-alpha-15);
   color: var(--brand-orange);
   font-weight: 600;
 }
@@ -152,7 +150,7 @@ const warnings = [
 .hero-image {
   min-height: 260px;
   border-radius: 24px;
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.15), rgba(255, 90, 31, 0.2));
+  background: linear-gradient(135deg, var(--brand-dark-alpha-15), var(--brand-orange-alpha-20));
 }
 
 .hotlines {
@@ -167,7 +165,7 @@ const warnings = [
 }
 
 .hotline-card {
-  background: #fff;
+  background: var(--brand-card);
   border-radius: 20px;
   padding: 18px;
   display: grid;
@@ -179,7 +177,7 @@ const warnings = [
   width: 36px;
   height: 36px;
   border-radius: 12px;
-  background: rgba(255, 90, 31, 0.15);
+  background: var(--brand-orange-alpha-15);
   color: var(--brand-orange);
   display: grid;
   place-items: center;
@@ -218,7 +216,7 @@ const warnings = [
 
 .center-list,
 .center-map {
-  background: #fff;
+  background: var(--brand-card);
   border-radius: 22px;
   padding: 20px;
   box-shadow: var(--brand-shadow);
@@ -234,18 +232,18 @@ const warnings = [
 
 .map-placeholder {
   border-radius: 18px;
-  background: linear-gradient(135deg, #dbeafe, #e0f2fe);
+  background: linear-gradient(135deg, var(--brand-info-bg-start), var(--brand-info-bg-end));
   padding: 18px;
   min-height: 180px;
   display: grid;
   place-items: center;
-  color: #1e3a8a;
+  color: var(--brand-info-strong);
   margin-top: 12px;
 }
 
 .map-tips {
   margin-top: 18px;
-  background: #fff7ed;
+  background: var(--brand-warning-panel);
   border-radius: 16px;
   padding: 16px;
 }
@@ -260,8 +258,8 @@ const warnings = [
 }
 
 .warning-card {
-  background: #0f172a;
-  color: #e2e8f0;
+  background: var(--brand-ink);
+  color: var(--brand-footer-text);
   border-radius: 26px;
   padding: 28px;
   display: grid;
@@ -278,7 +276,7 @@ const warnings = [
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(148, 163, 184, 0.15);
+  background: var(--brand-muted-alpha-15);
   border-radius: 16px;
   padding: 12px;
 }

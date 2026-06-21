@@ -5,7 +5,7 @@
         <div class="hero-chip">Alerta publico</div>
         <h1 class="hero-title">Proteja sua casa, derrote a dengue</h1>
         <p class="hero-subtitle">
-          A prevencao e a melhor estrategia para reduzir focos de mosquito e proteger sua familia.
+          A prevenção e a melhor estrategia para reduzir focos de mosquito e proteger sua família.
         </p>
         <div class="hero-actions">
           <q-btn color="primary" unelevated class="hero-btn" to="/report">Agir agora</q-btn>
@@ -17,8 +17,8 @@
 
     <section class="page-shell steps">
       <div class="steps-header">
-        <h2 class="section-title">6 passos essenciais para prevencao</h2>
-        <p>Eliminar agua parada interrompe o ciclo do mosquito e protege bairros inteiros.</p>
+        <h2 class="section-title">6 passos essenciais para prevenção</h2>
+        <p>Eliminar água parada interrompe o ciclo do mosquito e protege bairros inteiros.</p>
       </div>
       <div class="steps-grid">
         <div v-for="item in steps" :key="item.title" class="step-card">
@@ -34,9 +34,9 @@
     <section class="page-shell protection">
       <div class="protection-card">
         <div class="protection-info">
-          <h2 class="section-title">Guia de protecao pessoal</h2>
+          <h2 class="section-title">Guia de proteção pessoal</h2>
           <p>
-            Alem da prevencao em casa, proteger a pele e evitar horarios de risco ajuda a reduzir a
+            Além da prevenção em casa, proteger a pele e evitar horários de risco ajuda a reduzir a
             exposicao.
           </p>
           <ul>
@@ -58,7 +58,7 @@
     <section class="page-shell cta">
       <div class="cta-card">
         <h2 class="section-title">Pare a dengue em conjunto</h2>
-        <p>Reporte possiveis focos para acao rapida das equipes de saude.</p>
+        <p>Reporte possíveis focos para ação rápida das equipes de saude.</p>
         <q-btn unelevated color="white" text-color="primary" to="/report">Reportar foco</q-btn>
       </div>
     </section>
@@ -69,17 +69,17 @@
 const steps = [
   {
     title: 'Limpar calhas',
-    text: 'Remova folhas e evite acumulacao de agua em telhados.',
+    text: 'Remova folhas e evite acumulação de água em telhados.',
     icon: 'home',
   },
   {
     title: 'Cobrir reservatorios',
-    text: "Mantenha caixas d'agua e tambores bem fechados.",
+    text: "Mantenha caixas d'água e tambores bem fechados.",
     icon: 'water_drop',
   },
   {
     title: 'Esvaziar vasos',
-    text: 'Descarte a agua de pratos de plantas e recipientes.',
+    text: 'Descarte a água de pratos de plantas e recipientes.',
     icon: 'spa',
   },
   {
@@ -94,7 +94,7 @@ const steps = [
   },
   {
     title: 'Proteger animais',
-    text: 'Troque diariamente a agua de bebedouros.',
+    text: 'Troque diariamente a água de bebedouros.',
     icon: 'pets',
   },
 ]
@@ -102,7 +102,7 @@ const steps = [
 const protection = [
   {
     title: 'Repelente eficaz',
-    text: 'Aplique nas areas expostas, especialmente ao amanhecer e entardecer.',
+    text: 'Aplique nas áreas expostas, especialmente ao amanhecer e entardecer.',
   },
   {
     title: 'Horarios de risco',
@@ -132,7 +132,7 @@ const protection = [
   display: inline-flex;
   padding: 6px 14px;
   border-radius: 999px;
-  background: rgba(255, 90, 31, 0.15);
+  background: var(--brand-orange-alpha-15);
   color: var(--brand-orange);
   font-weight: 600;
 }
@@ -161,7 +161,7 @@ const protection = [
 .hero-image {
   min-height: 260px;
   border-radius: 24px;
-  background: linear-gradient(135deg, rgba(255, 90, 31, 0.1), rgba(17, 24, 39, 0.1));
+  background: linear-gradient(135deg, var(--brand-orange-alpha-12), var(--brand-dark-alpha-10));
 }
 
 .steps {
@@ -184,7 +184,7 @@ const protection = [
 }
 
 .step-card {
-  background: #fff;
+  background: var(--brand-card);
   border-radius: 18px;
   padding: 18px;
   box-shadow: var(--brand-shadow);
@@ -194,8 +194,8 @@ const protection = [
   width: 36px;
   height: 36px;
   border-radius: 12px;
-  background: rgba(34, 197, 94, 0.12);
-  color: #16a34a;
+  background: var(--brand-success-alpha-12);
+  color: var(--brand-green);
   display: grid;
   place-items: center;
   margin-bottom: 12px;
@@ -211,7 +211,7 @@ const protection = [
 }
 
 .protection-card {
-  background: #eef1f4;
+  background: var(--brand-protection-bg);
   border-radius: 26px;
   padding: 28px;
   display: grid;
@@ -241,13 +241,13 @@ const protection = [
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: #0ea5e9;
+  background: var(--brand-sky);
   margin-top: 6px;
 }
 
 .protection-image {
   border-radius: 24px;
-  background: linear-gradient(135deg, #fca5a5, #fde68a);
+  background: linear-gradient(135deg, var(--brand-warm-start), var(--brand-warm-end));
   position: relative;
 }
 
@@ -255,7 +255,7 @@ const protection = [
   position: absolute;
   bottom: 18px;
   left: 18px;
-  background: #fff;
+  background: var(--brand-card);
   padding: 6px 12px;
   border-radius: 12px;
   font-weight: 600;
@@ -268,7 +268,7 @@ const protection = [
 
 .cta-card {
   background: var(--brand-orange);
-  color: #fff;
+  color: var(--brand-card);
   border-radius: 26px;
   padding: 32px;
   text-align: center;

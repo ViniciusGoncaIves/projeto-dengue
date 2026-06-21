@@ -1,45 +1,75 @@
 <template>
   <q-page class="dashboard-page">
-    <div class="page-shell dashboard-header">
+    <div class="page-shell page-header">
       <div>
-        <h1 class="dashboard-title">Gestao de denuncias</h1>
-        <p class="dashboard-subtitle">
-          Analise e valide os focos de dengue reportados em tempo real.
-        </p>
+        <h1 class="page-title">{{ pageTitle }}</h1>
+        <p class="page-subtitle">{{ pageSubtitle }}</p>
       </div>
-      <q-btn color="primary" unelevated class="export-btn" @click="exportarDados">
-        Exportar dados
-      </q-btn>
+      <q-btn
+        to="/report"
+        color="primary"
+        unelevated
+        icon="add_location_alt"
+        label="Nova denúncia"
+      />
+    </div>
+
+    <div class="page-shell stats-row">
+      <div class="stat-card">
+        <div class="stat-title">Total</div>
+        <div class="stat-number">{{ statsValue('total') }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">Pendentes</div>
+        <div class="stat-number">{{ statsValue('pendentes') }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">Aprovadas</div>
+        <div class="stat-number">{{ statsValue('aprovadas') }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">Rejeitadas</div>
+        <div class="stat-number">{{ statsValue('rejeitadas') }}</div>
+      </div>
     </div>
 
     <div class="page-shell filter-row">
       <q-btn
-        v-for="chip in filtros"
-        :key="chip.value"
+        v-for="option in statusOptions"
+        :key="option.value"
         unelevated
         class="filter-chip"
-        :class="{ active: filtroAtivo === chip.value }"
-        @click="aplicarFiltro(chip.value)"
+        :class="{ active: filtroStatus === option.value }"
+        @click="setFiltro(option.value)"
       >
-        <q-icon :name="chip.icon" size="18px" />
-        {{ chip.label }}
+        <q-icon :name="option.icon" size="18px" />
+        {{ option.label }}
       </q-btn>
     </div>
 
     <div class="page-shell table-wrap">
-      <div class="table-head">
+      <div class="table-head" :class="{ admin: isAdmin }">
         <span>Data</span>
-        <span>Localizacao</span>
-        <span>Tipo de foco</span>
+        <span>Localização</span>
+        <span>Descrição</span>
+        <span>Status</span>
         <span>Foto</span>
-        <span>Acoes</span>
+        <span>Ações</span>
       </div>
-      <div v-if="loading" class="table-empty">Carregando denuncias...</div>
+
+      <div v-if="loading" class="table-empty">Carregando denúncias...</div>
+      <div v-else-if="error" class="table-empty table-error">{{ error }}</div>
       <div v-else-if="denunciasFiltradas.length === 0" class="table-empty">
-        Nenhuma denuncia encontrada.
+        Nenhuma denúncia encontrada.
       </div>
+
       <div v-else class="table-body">
-        <div v-for="denuncia in denunciasFiltradas" :key="denuncia.iddenuncia" class="table-row">
+        <div
+          v-for="denuncia in denunciasFiltradas"
+          :key="denuncia.iddenuncia"
+          class="table-row"
+          :class="{ admin: isAdmin }"
+        >
           <div class="cell">
             <div class="date-main">{{ formatDate(denuncia.data_criacao) }}</div>
             <div class="date-sub">{{ formatTime(denuncia.data_criacao) }}</div>
@@ -48,146 +78,290 @@
             <q-icon name="place" color="primary" size="16px" />
             <span>{{ formatLocalizacao(denuncia) }}</span>
           </div>
+          <div class="cell description">
+            <div class="description-main">{{ getTipo(denuncia) || 'Tipo não informado' }}</div>
+            <div class="description-sub">{{ getDetalhes(denuncia) || denuncia.descricao }}</div>
+          </div>
           <div class="cell">
-            <q-badge class="type-badge" color="orange-2" text-color="deep-orange-8">
-              {{ getTipo(denuncia) || 'Nao informado' }}
+            <q-badge class="status-badge" :class="statusClass(denuncia.status)">
+              {{ formatStatus(denuncia.status) }}
             </q-badge>
           </div>
           <div class="cell">
-            <div v-if="denuncia.foto" class="photo-pill">
-              <img :src="denuncia.foto" alt="Foco" />
-            </div>
-            <span v-else class="text-caption text-grey-6">Sem foto</span>
+            <a
+              v-if="denuncia.foto"
+              :href="denuncia.foto"
+              target="_blank"
+              rel="noopener"
+              class="photo-pill"
+            >
+              <img :src="denuncia.foto" alt="Foco denunciado" />
+            </a>
+            <span v-else class="empty-photo">Sem imagem</span>
           </div>
           <div class="cell actions">
             <q-btn
-              color="positive"
+              dense
               unelevated
-              size="sm"
-              @click="aprovar(denuncia)"
-              :disable="denuncia.status === 'APROVADA'"
-            >
-              Aprovar
-            </q-btn>
+              color="primary"
+              icon="visibility"
+              @click="abrirDetalhes(denuncia)"
+            />
             <q-btn
-              color="grey-2"
-              text-color="grey-9"
+              v-if="podeEditar(denuncia)"
+              dense
               unelevated
-              size="sm"
-              @click="abrirRejeicao(denuncia)"
-              :disable="denuncia.status === 'REJEITADA'"
-            >
-              Rejeitar
-            </q-btn>
+              color="secondary"
+              icon="edit"
+              :to="`/dashboard/denuncias/${denuncia.iddenuncia}/editar`"
+            />
+            <template v-if="isAdmin && denuncia.status === 'PENDENTE'">
+              <q-btn
+                dense
+                unelevated
+                color="positive"
+                icon="check"
+                @click="prepararAlteracaoStatus(denuncia, 'APROVADO')"
+              />
+              <q-btn
+                dense
+                unelevated
+                color="negative"
+                icon="close"
+                @click="abrirRejeicao(denuncia)"
+              />
+            </template>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="page-shell stats-row">
-      <div class="stat-card">
-        <div class="stat-title">Pendentes hoje</div>
-        <div class="stat-number">{{ statsValue('pendentes_hoje') }}</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-title">Validadas</div>
-        <div class="stat-number">{{ statsValue('aprovadas') }}</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-title">Urgencia critica</div>
-        <div class="stat-number">{{ urgenciaCritica }}</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-title">Tempo medio</div>
-        <div class="stat-number">{{ tempoMedio }}</div>
-      </div>
-    </div>
-
     <q-dialog v-model="rejeicaoDialog">
-      <q-card style="min-width: 360px">
+      <q-card class="reject-dialog">
         <q-card-section>
-          <div class="text-h6">Motivo da rejeicao</div>
+          <div class="text-h6">Motivo da rejeição</div>
+          <div class="dialog-subtitle">
+            O motivo ficará visível para o usuário quando a denúncia for identificada.
+          </div>
         </q-card-section>
         <q-card-section>
-          <q-input v-model="motivoRejeicao" type="textarea" outlined />
+          <q-input
+            v-model="motivoRejeicao"
+            type="textarea"
+            outlined
+            label="Motivo"
+            placeholder="Informe o motivo para registro interno"
+          />
         </q-card-section>
         <q-card-actions align="right">
           <q-btn flat label="Cancelar" v-close-popup />
-          <q-btn color="negative" unelevated label="Confirmar" @click="confirmarRejeicao" />
+          <q-btn color="negative" unelevated label="Continuar" @click="prepararRejeicao" />
         </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <q-dialog v-model="confirmacaoDialog">
+      <q-card class="confirm-dialog">
+        <q-card-section>
+          <div class="text-h6">{{ confirmacaoTitulo }}</div>
+          <div class="dialog-subtitle">{{ confirmacaoMensagem }}</div>
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="Cancelar" v-close-popup />
+          <q-btn
+            :color="acaoPendente?.status === 'REJEITADO' ? 'negative' : 'positive'"
+            unelevated
+            label="Confirmar alteração"
+            :loading="alterandoStatus"
+            @click="confirmarAlteracaoStatus"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <q-dialog v-model="detalhesDialog" @hide="limparMapaDetalhes">
+      <q-card class="details-dialog">
+        <q-card-section class="details-header">
+          <div>
+            <div class="text-h6">Detalhes da denúncia</div>
+            <div class="details-subtitle">
+              {{ selectedDenuncia ? `#${selectedDenuncia.iddenuncia}` : '' }}
+            </div>
+          </div>
+          <q-btn flat round dense icon="close" v-close-popup />
+        </q-card-section>
+
+        <q-card-section v-if="selectedDenuncia" class="details-content">
+          <div class="details-grid">
+            <div class="detail-item">
+              <span>Status</span>
+              <q-badge class="status-badge" :class="statusClass(selectedDenuncia.status)">
+                {{ formatStatus(selectedDenuncia.status) }}
+              </q-badge>
+            </div>
+            <div class="detail-item">
+              <span>Data</span>
+              <strong
+                >{{ formatDate(selectedDenuncia.data_criacao) }}
+                {{ formatTime(selectedDenuncia.data_criacao) }}</strong
+              >
+            </div>
+            <div class="detail-item">
+              <span>Tipo</span>
+              <strong>{{ getTipo(selectedDenuncia) || 'Não informado' }}</strong>
+            </div>
+            <div class="detail-item">
+              <span>Urgência</span>
+              <strong>{{ getUrgencia(selectedDenuncia) || 'Não informada' }}</strong>
+            </div>
+            <div v-if="isAdmin" class="detail-item">
+              <span>Identificação</span>
+              <strong>{{ selectedDenuncia.anonima ? 'Anônima' : 'Identificada' }}</strong>
+            </div>
+            <div v-if="isAdmin" class="detail-item">
+              <span>Responsável</span>
+              <strong>{{ autorDenuncia(selectedDenuncia) }}</strong>
+            </div>
+            <div class="detail-item detail-wide">
+              <span>Localização</span>
+              <strong>{{ formatLocalizacao(selectedDenuncia) }}</strong>
+            </div>
+            <div class="detail-item">
+              <span>Latitude</span>
+              <strong>{{ selectedDenuncia.latitude }}</strong>
+            </div>
+            <div class="detail-item">
+              <span>Longitude</span>
+              <strong>{{ selectedDenuncia.longitude }}</strong>
+            </div>
+          </div>
+
+          <div class="detail-block">
+            <span>Descrição</span>
+            <p>
+              {{ getDetalhes(selectedDenuncia) || selectedDenuncia.descricao || 'Sem descrição.' }}
+            </p>
+          </div>
+
+          <div v-if="selectedDenuncia.status === 'REJEITADO'" class="detail-block rejection-block">
+            <span>Motivo da rejeição</span>
+            <p>{{ selectedDenuncia.motivo_rejeicao || 'Motivo não informado.' }}</p>
+          </div>
+
+          <div class="detail-block">
+            <span>Mapa</span>
+            <div ref="detailsMapEl" class="details-map"></div>
+          </div>
+
+          <div class="detail-block">
+            <span>Imagens</span>
+            <div v-if="imagensSelecionadas.length" class="image-grid">
+              <a
+                v-for="imagem in imagensSelecionadas"
+                :key="imagem"
+                :href="imagem"
+                target="_blank"
+                rel="noopener"
+                class="detail-image"
+              >
+                <img :src="imagem" alt="Imagem da denúncia" />
+              </a>
+            </div>
+            <p v-else>Sem imagens anexadas.</p>
+          </div>
+
+          <div v-if="isAdmin && selectedDenuncia.status !== 'PENDENTE'" class="detail-actions">
+            <q-btn
+              color="positive"
+              unelevated
+              icon="check"
+              label="Aprovar denúncia"
+              :disable="selectedDenuncia.status === 'APROVADO'"
+              @click="prepararAlteracaoStatus(selectedDenuncia, 'APROVADO')"
+            />
+            <q-btn
+              color="negative"
+              unelevated
+              icon="close"
+              label="Rejeitar denúncia"
+              :disable="selectedDenuncia.status === 'REJEITADO'"
+              @click="abrirRejeicao(selectedDenuncia)"
+            />
+          </div>
+        </q-card-section>
       </q-card>
     </q-dialog>
   </q-page>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
+import { useAuthStore } from 'src/stores/auth-store'
 import { useDenuncias } from 'src/composables/useDenuncias'
 import { formatLocalizacao, parseDescricaoDenuncia } from 'src/helpers/denuncia'
 
-const { denuncias, stats, loading, fetchDenuncias, fetchStats, updateStatus } = useDenuncias()
+const authStore = useAuthStore()
+const { denuncias, stats, loading, error, fetchDenuncias, fetchStats, updateStatus } =
+  useDenuncias()
 
-const filtroAtivo = ref('pendentes')
+const filtroStatus = ref('TODAS')
 const rejeicaoDialog = ref(false)
+const detalhesDialog = ref(false)
 const motivoRejeicao = ref('')
 const denunciaSelecionada = ref(null)
-const localizacaoUsuario = ref(null)
+const selectedDenuncia = ref(null)
+const detailsMapEl = ref(null)
+const detailsMap = ref(null)
+const confirmacaoDialog = ref(false)
+const acaoPendente = ref(null)
+const alterandoStatus = ref(false)
 
-const filtros = [
-  { label: 'Pendentes', value: 'pendentes', icon: 'pending_actions' },
-  { label: 'Urgencia alta', value: 'urgencia', icon: 'priority_high' },
-  { label: 'Mais recentes', value: 'recentes', icon: 'schedule' },
-  { label: 'Por proximidade', value: 'proximidade', icon: 'near_me' },
+const statusOptions = [
+  { label: 'Todas', value: 'TODAS', icon: 'list_alt' },
+  { label: 'Pendentes', value: 'PENDENTE', icon: 'pending_actions' },
+  { label: 'Aprovadas', value: 'APROVADO', icon: 'check_circle' },
+  { label: 'Rejeitadas', value: 'REJEITADO', icon: 'cancel' },
 ]
 
-onMounted(() => {
-  fetchDenuncias()
-  fetchStats()
+const isAdmin = computed(() => authStore.user?.tipo === 'ADMIN')
+const pageTitle = computed(() => (isAdmin.value ? 'Gestão de denúncias' : 'Minhas denúncias'))
+const pageSubtitle = computed(() =>
+  isAdmin.value
+    ? 'Analise as denúncias registradas e atualize o status de atendimento.'
+    : 'Acompanhe as denúncias registradas com a sua conta.',
+)
+
+onMounted(async () => {
+  if (!authStore.user) {
+    await authStore.fetchMe()
+  }
+  await carregarDados()
 })
 
-const aplicarFiltro = (valor) => {
-  filtroAtivo.value = valor
-  if (valor === 'proximidade' && !localizacaoUsuario.value) {
-    navigator.geolocation?.getCurrentPosition((pos) => {
-      localizacaoUsuario.value = {
-        latitude: pos.coords.latitude,
-        longitude: pos.coords.longitude,
-      }
-    })
-  }
+const carregarDados = async () => {
+  await Promise.all([fetchDenuncias(), fetchStats()])
 }
 
-const getTipo = (denuncia) => parseDescricaoDenuncia(denuncia?.descricao).tipo
-const getUrgencia = (denuncia) => parseDescricaoDenuncia(denuncia?.descricao).urgencia
+const setFiltro = (status) => {
+  filtroStatus.value = status
+}
 
 const denunciasFiltradas = computed(() => {
-  let lista = [...(denuncias.value || [])]
-
-  if (filtroAtivo.value === 'pendentes') {
-    lista = lista.filter((item) => item.status === 'PENDENTE')
-  }
-
-  if (filtroAtivo.value === 'urgencia') {
-    lista = lista.filter((item) => getUrgencia(item) === 'Alta')
-  }
-
-  if (filtroAtivo.value === 'proximidade' && localizacaoUsuario.value) {
-    lista = lista
-      .map((item) => ({
-        ...item,
-        distancia: calcularDistancia(localizacaoUsuario.value, item),
-      }))
-      .sort((a, b) => (a.distancia || 0) - (b.distancia || 0))
-  }
-
-  return lista
+  const lista = [...(denuncias.value || [])]
+  if (filtroStatus.value === 'TODAS') return lista
+  return lista.filter((denuncia) => denuncia.status === filtroStatus.value)
 })
 
-const aprovar = async (denuncia) => {
-  await updateStatus(denuncia.iddenuncia, 'APROVADA')
-  fetchDenuncias()
-  fetchStats()
+const podeEditar = (denuncia) => {
+  return !isAdmin.value && ['PENDENTE', 'REJEITADO'].includes(denuncia?.status)
 }
+
+const getParsed = (denuncia) => parseDescricaoDenuncia(denuncia?.descricao)
+const getTipo = (denuncia) => getParsed(denuncia).tipo
+const getUrgencia = (denuncia) => getParsed(denuncia).urgencia
+const getDetalhes = (denuncia) => getParsed(denuncia).detalhes
 
 const abrirRejeicao = (denuncia) => {
   denunciaSelecionada.value = denuncia
@@ -195,12 +369,63 @@ const abrirRejeicao = (denuncia) => {
   rejeicaoDialog.value = true
 }
 
-const confirmarRejeicao = async () => {
+const abrirDetalhes = (denuncia) => {
+  selectedDenuncia.value = denuncia
+  detalhesDialog.value = true
+}
+
+const confirmacaoTitulo = computed(() => {
+  if (acaoPendente.value?.status === 'REJEITADO') return 'Confirmar rejeição'
+  if (acaoPendente.value?.status === 'APROVADO') return 'Confirmar aprovação'
+  return 'Confirmar alteração'
+})
+
+const confirmacaoMensagem = computed(() => {
+  const denuncia = acaoPendente.value?.denuncia
+  if (!denuncia) return ''
+
+  if (acaoPendente.value.status === 'REJEITADO') {
+    return `Você está prestes a rejeitar a denúncia #${denuncia.iddenuncia}. Confirme apenas após revisar todos os detalhes.`
+  }
+
+  return `Você está prestes a aprovar a denúncia #${denuncia.iddenuncia}. Confirme apenas após revisar todos os detalhes.`
+})
+
+const prepararAlteracaoStatus = (denuncia, status, motivo = '') => {
+  if (!denuncia) return
+
+  acaoPendente.value = { denuncia, status, motivo }
+  confirmacaoDialog.value = true
+}
+
+const prepararRejeicao = () => {
   if (!denunciaSelecionada.value) return
-  await updateStatus(denunciaSelecionada.value.iddenuncia, 'REJEITADA', motivoRejeicao.value)
-  rejeicaoDialog.value = false
-  fetchDenuncias()
-  fetchStats()
+  prepararAlteracaoStatus(denunciaSelecionada.value, 'REJEITADO', motivoRejeicao.value)
+}
+
+const confirmarAlteracaoStatus = async () => {
+  if (!acaoPendente.value) return
+
+  alterandoStatus.value = true
+  try {
+    const { denuncia, status, motivo } = acaoPendente.value
+    await updateStatus(denuncia.iddenuncia, status, motivo)
+    await carregarDados()
+
+    const denunciaAtualizada = denuncias.value.find(
+      (item) => item.iddenuncia === denuncia.iddenuncia,
+    )
+    if (denunciaAtualizada) {
+      selectedDenuncia.value = denunciaAtualizada
+    }
+
+    confirmacaoDialog.value = false
+    rejeicaoDialog.value = false
+    acaoPendente.value = null
+    motivoRejeicao.value = ''
+  } finally {
+    alterandoStatus.value = false
+  }
 }
 
 const formatDate = (date) =>
@@ -209,55 +434,80 @@ const formatDate = (date) =>
 const formatTime = (date) =>
   new Date(date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
 
-const calcularDistancia = (origem, destino) => {
-  if (destino.latitude == null || destino.longitude == null) return null
-  const toRad = (value) => (value * Math.PI) / 180
-  const R = 6371
-  const dLat = toRad(destino.latitude - origem.latitude)
-  const dLon = toRad(destino.longitude - origem.longitude)
-  const lat1 = toRad(origem.latitude)
-  const lat2 = toRad(destino.latitude)
-
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2)
-
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-  return R * c
+const formatStatus = (status) => {
+  const labels = {
+    PENDENTE: 'Pendente',
+    APROVADO: 'Aprovada',
+    REJEITADO: 'Rejeitada',
+  }
+  return labels[status] || status || 'Não informado'
 }
+
+const statusClass = (status) => ({
+  'status-pendente': status === 'PENDENTE',
+  'status-aprovada': status === 'APROVADO',
+  'status-rejeitada': status === 'REJEITADO',
+})
 
 const statsValue = (key) => stats.value?.[key] ?? 0
 
-const urgenciaCritica = computed(() => {
-  return denuncias.value?.filter((item) => getUrgencia(item) === 'Alta').length || 0
-})
-
-const tempoMedio = computed(() => {
-  const valor = stats.value?.tempo_medio_horas
-  if (!valor) return '0h'
-  return `${valor}h`
-})
-
-const exportarDados = () => {
-  if (!denunciasFiltradas.value.length) return
-
-  const header = ['Data', 'Localizacao', 'Tipo', 'Status']
-  const linhas = denunciasFiltradas.value.map((item) => [
-    formatDate(item.data_criacao),
-    formatLocalizacao(item),
-    getTipo(item),
-    item.status,
-  ])
-
-  const csv = [header, ...linhas].map((row) => row.join(';')).join('\n')
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = 'denuncias.csv'
-  link.click()
-  URL.revokeObjectURL(url)
+const autorDenuncia = (denuncia) => {
+  if (!denuncia || denuncia.anonima) return 'Denúncia anônima'
+  const nome = denuncia.usuario_nome || 'Usuário não informado'
+  const email = denuncia.usuario_email ? ` (${denuncia.usuario_email})` : ''
+  return `${nome}${email}`
 }
+
+const imagensSelecionadas = computed(() => {
+  const imagens = selectedDenuncia.value?.imagens
+  if (Array.isArray(imagens)) return imagens.filter(Boolean)
+  if (selectedDenuncia.value?.foto) return [selectedDenuncia.value.foto]
+  return []
+})
+
+const limparMapaDetalhes = () => {
+  detailsMap.value?.remove()
+  detailsMap.value = null
+}
+
+const montarMapaDetalhes = async () => {
+  limparMapaDetalhes()
+  await nextTick()
+
+  const denuncia = selectedDenuncia.value
+  const lat = Number(denuncia?.latitude)
+  const lng = Number(denuncia?.longitude)
+
+  if (!detailsMapEl.value || !Number.isFinite(lat) || !Number.isFinite(lng)) return
+
+  detailsMap.value = L.map(detailsMapEl.value, {
+    zoomControl: true,
+    attributionControl: true,
+  }).setView([lat, lng], 16)
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap contributors',
+  }).addTo(detailsMap.value)
+
+  L.circleMarker([lat, lng], {
+    radius: 9,
+    color: 'var(--brand-orange-dark)',
+    fillColor: 'var(--brand-orange)',
+    fillOpacity: 0.85,
+    weight: 3,
+  }).addTo(detailsMap.value)
+}
+
+watch(detalhesDialog, (isOpen) => {
+  if (isOpen) {
+    montarMapaDetalhes()
+  }
+})
+
+onBeforeUnmount(() => {
+  limparMapaDetalhes()
+})
 </script>
 
 <style scoped>
@@ -266,7 +516,7 @@ const exportarDados = () => {
   background: var(--brand-muted);
 }
 
-.dashboard-header {
+.page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -274,19 +524,46 @@ const exportarDados = () => {
   margin-bottom: 24px;
 }
 
-.dashboard-title {
+.page-title {
   font-size: clamp(28px, 3vw, 36px);
   font-weight: 700;
 }
 
-.dashboard-subtitle {
+.page-subtitle,
+.date-sub,
+.description-sub,
+.empty-photo {
   color: var(--brand-ink-soft);
 }
 
-.export-btn {
-  border-radius: 999px;
-  padding: 10px 20px;
+.stats-row {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  margin-bottom: 20px;
+}
+
+.stat-card,
+.table-wrap {
+  background: var(--brand-card);
+  box-shadow: var(--brand-shadow);
+}
+
+.stat-card {
+  border-radius: var(--brand-radius);
+  padding: 16px;
+}
+
+.stat-title {
+  color: var(--brand-ink-soft);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.stat-number {
+  font-size: 24px;
   font-weight: 700;
+  margin-top: 6px;
 }
 
 .filter-row {
@@ -298,7 +575,7 @@ const exportarDados = () => {
 
 .filter-chip {
   border-radius: 999px;
-  background: #fff;
+  background: var(--brand-card);
   color: var(--brand-ink-soft);
   padding: 10px 18px;
   display: inline-flex;
@@ -309,22 +586,25 @@ const exportarDados = () => {
 
 .filter-chip.active {
   background: var(--brand-orange);
-  color: #fff;
+  color: var(--brand-on-primary);
 }
 
 .table-wrap {
-  background: #fff;
-  border-radius: 26px;
-  box-shadow: var(--brand-shadow);
+  border-radius: var(--brand-radius);
   padding: 18px;
 }
 
 .table-head,
 .table-row {
   display: grid;
-  grid-template-columns: 160px 1.5fr 160px 120px 180px;
+  grid-template-columns: 150px 1.1fr 1.35fr 120px 100px 120px;
   gap: 12px;
   align-items: center;
+}
+
+.table-head.admin,
+.table-row.admin {
+  grid-template-columns: 150px 1fr 1.15fr 120px 100px 280px;
 }
 
 .table-head {
@@ -342,30 +622,42 @@ const exportarDados = () => {
 }
 
 .table-row {
-  background: #fff7f2;
-  border-radius: 18px;
+  background: var(--brand-panel);
+  border-radius: var(--brand-radius);
   padding: 12px;
 }
 
-.cell.location {
+.cell.location,
+.actions {
   display: flex;
   gap: 8px;
   align-items: center;
 }
 
+.description-main,
 .date-main {
   font-weight: 700;
 }
 
-.date-sub {
-  color: var(--brand-ink-soft);
-  font-size: 12px;
-}
-
-.type-badge {
+.status-badge {
   border-radius: 999px;
   padding: 6px 10px;
-  font-weight: 600;
+  font-weight: 700;
+}
+
+.status-pendente {
+  background: var(--brand-warning-soft);
+  color: var(--brand-warning-text);
+}
+
+.status-aprovada {
+  background: var(--brand-success-soft);
+  color: var(--brand-success-text);
+}
+
+.status-rejeitada {
+  background: var(--brand-danger-soft);
+  color: var(--brand-danger-text);
 }
 
 .photo-pill {
@@ -373,7 +665,7 @@ const exportarDados = () => {
   height: 42px;
   border-radius: 12px;
   overflow: hidden;
-  background: #e2e8f0;
+  background: var(--brand-photo-bg);
   display: grid;
   place-items: center;
 }
@@ -385,8 +677,7 @@ const exportarDados = () => {
 }
 
 .actions {
-  display: flex;
-  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .table-empty {
@@ -395,40 +686,131 @@ const exportarDados = () => {
   color: var(--brand-ink-soft);
 }
 
-.stats-row {
-  margin-top: 24px;
-  display: grid;
+.table-error {
+  color: var(--brand-danger-text);
+}
+
+.reject-dialog {
+  min-width: min(420px, 90vw);
+}
+
+.confirm-dialog {
+  min-width: min(420px, 90vw);
+}
+
+.dialog-subtitle {
+  color: var(--brand-ink-soft);
+  margin-top: 4px;
+}
+
+.details-dialog {
+  width: min(920px, 94vw);
+  max-width: 920px;
+}
+
+.details-header {
+  display: flex;
+  justify-content: space-between;
   gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  align-items: flex-start;
 }
 
-.stat-card {
-  background: #fff;
-  border-radius: 18px;
-  padding: 16px;
-  box-shadow: var(--brand-shadow);
-}
-
-.stat-title {
+.details-subtitle,
+.detail-item span,
+.detail-block span {
   color: var(--brand-ink-soft);
   font-size: 12px;
-  font-weight: 600;
-}
-
-.stat-number {
-  font-size: 24px;
   font-weight: 700;
-  margin-top: 6px;
+  text-transform: uppercase;
 }
 
-@media (max-width: 900px) {
-  .table-head,
-  .table-row {
-    grid-template-columns: 1fr;
+.details-content {
+  display: grid;
+  gap: 18px;
+}
+
+.details-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+.detail-item,
+.detail-block {
+  background: var(--brand-panel);
+  border-radius: var(--brand-radius);
+  padding: 14px;
+}
+
+.detail-item {
+  display: grid;
+  gap: 8px;
+}
+
+.detail-wide {
+  grid-column: 1 / -1;
+}
+
+.detail-block {
+  display: grid;
+  gap: 8px;
+}
+
+.detail-block p {
+  margin: 0;
+  color: var(--brand-ink);
+}
+
+.rejection-block {
+  background: var(--brand-danger-soft);
+}
+
+.details-map {
+  height: 300px;
+  border-radius: var(--brand-radius);
+  border: 1px solid var(--brand-line);
+  overflow: hidden;
+}
+
+.image-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+}
+
+.detail-image {
+  aspect-ratio: 1;
+  border-radius: var(--brand-radius);
+  overflow: hidden;
+  background: var(--brand-photo-bg);
+}
+
+.detail-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+@media (max-width: 1000px) {
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
   }
 
-  .actions {
-    justify-content: flex-start;
+  .table-head {
+    display: none;
+  }
+
+  .table-row,
+  .table-row.admin {
+    grid-template-columns: 1fr;
   }
 }
 </style>

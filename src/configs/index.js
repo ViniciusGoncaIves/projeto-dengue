@@ -1,5 +1,6 @@
 const { Pool } = require('pg');
 const fs = require('fs');
+const { logError, sanitizeValue } = require('../utils/logger');
 
 const pool = new Pool({
   user: process.env.POSTGRES_USER,
@@ -14,5 +15,23 @@ const pool = new Pool({
 });
 
 module.exports = {
-  query: (sql, params) => pool.query(sql, params)
+  query: async (sql, params) => {
+    try {
+      return await pool.query(sql, params);
+    } catch (error) {
+      logError('Erro em query PostgreSQL', error);
+      console.error(
+        '[ERROR] Query PostgreSQL com falha',
+        JSON.stringify(
+          {
+            sql,
+            params: sanitizeValue(params),
+          },
+          null,
+          2,
+        ),
+      );
+      throw error;
+    }
+  }
 };

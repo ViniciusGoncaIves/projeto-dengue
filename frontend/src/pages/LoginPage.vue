@@ -5,7 +5,7 @@
         <div class="text-center q-mb-lg">
           <h1 class="text-h5 text-dark q-my-none q-mb-sm">Acesse sua conta</h1>
           <p class="text-subtitle2 text-weight-light text-grey-7">
-            Entre com suas credenciais para gerenciar notificações e focos.
+            Entre para acompanhar suas denúncias ou analisar registros como administrador.
           </p>
         </div>
 
@@ -35,12 +35,7 @@
           </div>
 
           <div>
-            <div class="row justify-between items-center q-mb-xs">
-              <label class="text-caption text-weight-medium text-dark">Senha</label>
-              <a href="#" class="text-caption text-primary text-weight-medium"
-                >Esqueci minha senha</a
-              >
-            </div>
+            <label class="text-caption text-weight-medium text-dark">Senha</label>
             <q-input
               v-model="form.password"
               outlined
@@ -60,7 +55,7 @@
             unelevated
             size="lg"
             color="primary"
-            label="Entrar"
+            label="Login"
             icon-right="arrow_forward"
             class="full-width text-white text-weight-bold q-mt-md"
             :loading="loading"
@@ -81,13 +76,6 @@
         </div>
       </div>
 
-      <div class="footer-links text-center q-mt-lg">
-        <a href="#" class="text-caption text-grey-6">Termos de Uso</a>
-        <span class="text-grey-6">·</span>
-        <a href="#" class="text-caption text-grey-6">Privacidade</a>
-        <span class="text-grey-6">·</span>
-        <a href="#" class="text-caption text-grey-6">Suporte</a>
-      </div>
     </div>
   </div>
 </template>
@@ -96,9 +84,11 @@
 import { http, setAuthToken } from 'src/boot/apiFetch'
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useAuthStore } from 'src/stores/auth-store'
 
 const router = useRouter()
 const route = useRoute()
+const authStore = useAuthStore()
 
 const formRef = ref(null)
 
@@ -130,6 +120,7 @@ const handleLogin = async () => {
     }
 
     setAuthToken(data.token)
+    await authStore.fetchMe()
     const redirectTo =
       typeof route.query.redirect === 'string' ? route.query.redirect : '/dashboard'
     router.push(redirectTo)
@@ -156,7 +147,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background-color: var(--brand-field);
   padding: 20px;
 }
 
@@ -166,16 +157,10 @@ onMounted(() => {
 }
 
 .login-card {
-  background-color: #ffffff;
+  background-color: var(--brand-card);
   border-radius: 12px;
   padding: 40px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.footer-links {
-  margin-top: 40px;
-  padding-top: 20px;
-  border-top: 1px solid #e0e0e0;
+  box-shadow: var(--brand-shadow-soft);
 }
 
 a {
@@ -188,26 +173,26 @@ a:hover {
 }
 
 :deep(.q-field__control) {
-  color: #333333;
+  color: var(--brand-ink);
 }
 
 :deep(.q-field__native) {
-  color: #999999 !important;
+  color: var(--brand-placeholder) !important;
 }
 
 :deep(.q-field__native::placeholder) {
-  color: #999999 !important;
+  color: var(--brand-placeholder) !important;
 }
 
 :deep(.q-placeholder) {
-  color: #999999 !important;
+  color: var(--brand-placeholder) !important;
 }
 
 :deep(.q-field--outlined .q-field__control:before) {
-  border-color: #e0e0e0;
+  border-color: var(--brand-line);
 }
 
 :deep(.q-field--outlined.q-field--focused .q-field__control:before) {
-  border-color: #ff5722;
+  border-color: var(--brand-orange);
 }
 </style>

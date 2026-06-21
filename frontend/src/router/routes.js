@@ -55,7 +55,10 @@ const routes = [
     path: '/dashboard',
     component: () => import('layouts/MainLayout.vue'),
     meta: { requiresAuth: true },
-    children: [{ path: '', component: () => import('pages/DashboardPage.vue') }],
+    children: [
+      { path: '', component: () => import('pages/DashboardPage.vue') },
+      { path: 'denuncias/:id/editar', component: () => import('pages/ReportSitePage.vue') },
+    ],
   },
   {
     path: '/denuncias',

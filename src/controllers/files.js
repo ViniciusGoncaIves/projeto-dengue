@@ -1,4 +1,5 @@
 const fileService = require('../services/files');
+const { logError } = require('../utils/logger');
 
 async function uploadFile(req, res) {
     try {
@@ -9,6 +10,7 @@ async function uploadFile(req, res) {
         }
         res.status(200).json(result);
     } catch (error) {
+        logError('uploadFile falhou', error, req);
         res.status(500).json({ status: 'error', message: 'Erro interno do servidor', error: error.message });
     }
 

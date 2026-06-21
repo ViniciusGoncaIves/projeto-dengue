@@ -5,7 +5,7 @@
         <div class="text-center q-mb-lg">
           <h1 class="text-h5 text-dark q-my-none q-mb-sm">Crie sua conta</h1>
           <p class="text-subtitle2 text-weight-light text-grey-7">
-            Junte-se a nós no combate à Dengue e proteja sua comunidade.
+            Cadastre-se para acompanhar as denúncias que você registrar.
           </p>
         </div>
 
@@ -82,31 +82,13 @@
             />
           </div>
 
-          <div class="q-mt-md">
-            <q-checkbox
-              v-model="form.acceptTerms"
-              label-style="font-size: 13px"
-              class="text-grey-7"
-            >
-              <template v-slot:default>
-                <span class="text-caption">
-                  Eu aceito os
-                  <a href="#" class="text-primary text-weight-medium">Termos de Uso</a>
-                  e a
-                  <a href="#" class="text-primary text-weight-medium">Política de Privacidade</a>
-                </span>
-              </template>
-            </q-checkbox>
-          </div>
-
           <q-btn
             type="submit"
             unelevated
             size="lg"
             color="primary"
-            label="Criar Conta"
+            label="Criar conta"
             class="full-width text-white text-weight-bold"
-            :disable="!form.acceptTerms"
             :loading="loading"
           />
         </q-form>
@@ -115,7 +97,7 @@
           <span class="text-caption text-grey-7">
             Já tenho uma conta?
             <router-link to="/login" class="text-primary text-weight-bold text-decoration-none">
-              Entrar
+              Login
             </router-link>
           </span>
         </div>
@@ -127,9 +109,11 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { http } from 'src/boot/apiFetch'
+import { http, setAuthToken } from 'src/boot/apiFetch'
+import { useAuthStore } from 'src/stores/auth-store'
 
 const router = useRouter()
+const authStore = useAuthStore()
 
 const formRef = ref(null)
 
@@ -138,7 +122,6 @@ const form = ref({
   email: '',
   password: '',
   confirmPassword: '',
-  acceptTerms: false,
 })
 
 const showPassword = ref(false)
@@ -151,7 +134,6 @@ const handleRegister = async () => {
 
   const isValid = await formRef.value?.validate()
   if (!isValid) return
-  if (!form.value.acceptTerms) return
 
   loading.value = true
   try {
@@ -161,7 +143,18 @@ const handleRegister = async () => {
       senha: form.value.password,
     })
 
-    router.push({ path: '/login', query: { registered: '1' } })
+    const login = await http.post('/api/auth/login', {
+      email: form.value.email,
+      senha: form.value.password,
+    })
+
+    if (!login?.token) {
+      throw new Error('Conta criada, mas a autenticação automática falhou.')
+    }
+
+    setAuthToken(login.token)
+    await authStore.fetchMe()
+    router.push('/dashboard')
   } catch (err) {
     errorMessage.value = err?.message || 'Erro ao criar conta'
   } finally {
@@ -176,7 +169,7 @@ const handleRegister = async () => {
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background-color: var(--brand-field);
   padding: 20px;
 }
 
@@ -186,10 +179,10 @@ const handleRegister = async () => {
 }
 
 .register-card {
-  background-color: #ffffff;
+  background-color: var(--brand-card);
   border-radius: 12px;
   padding: 40px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--brand-shadow-soft);
 }
 
 a {
@@ -202,26 +195,22 @@ a:hover {
 }
 
 :deep(.q-field__control) {
-  color: #333333;
+  color: var(--brand-ink);
 }
 
 :deep(.q-field__native) {
-  color: #999999 !important;
+  color: var(--brand-placeholder) !important;
 }
 
 :deep(.q-placeholder) {
-  color: #999999 !important;
+  color: var(--brand-placeholder) !important;
 }
 
 :deep(.q-field--outlined .q-field__control:before) {
-  border-color: #e0e0e0;
+  border-color: var(--brand-line);
 }
 
 :deep(.q-field--outlined.q-field--focused .q-field__control:before) {
-  border-color: #ff5722;
-}
-
-:deep(.q-checkbox__svg) {
-  color: #ff5722;
+  border-color: var(--brand-orange);
 }
 </style>
