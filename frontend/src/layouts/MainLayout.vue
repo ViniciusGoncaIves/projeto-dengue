@@ -2,7 +2,7 @@
   <q-layout view="hHh lpR fFf" class="auth-layout">
     <q-header class="auth-header">
       <q-toolbar class="auth-toolbar page-shell">
-        <div class="auth-brand">
+        <router-link class="auth-brand" to="/" aria-label="Ir para o início">
           <div class="auth-brand-icon">
             <q-icon name="bug_report" size="20px" />
           </div>
@@ -10,11 +10,22 @@
             <div class="auth-brand-title">Combate à Dengue</div>
             <div class="auth-brand-subtitle">Registro comunitário de focos</div>
           </div>
-        </div>
+        </router-link>
 
         <nav class="auth-nav">
+          <router-link class="auth-link" to="/" :class="isActive('/')">
+            Início
+          </router-link>
           <router-link class="auth-link" to="/dashboard" :class="isActive('/dashboard')">
             Painel
+          </router-link>
+          <router-link
+            v-if="isAdmin"
+            class="auth-link"
+            to="/dashboard/usuarios"
+            :class="isActive('/dashboard/usuarios')"
+          >
+            Usuários
           </router-link>
           <router-link class="auth-link" to="/report" :class="isActive('/report')">
             Nova denúncia
@@ -67,6 +78,7 @@ onMounted(() => {
 
 const userName = computed(() => authStore.user?.nome || '')
 const userEmail = computed(() => authStore.user?.email || '')
+const isAdmin = computed(() => authStore.user?.tipo === 'ADMIN')
 const userInitials = computed(() => {
   const name = userName.value.trim()
   if (!name) return 'U'
@@ -109,6 +121,8 @@ const handleLogout = () => {
   display: flex;
   align-items: center;
   gap: 12px;
+  color: inherit;
+  text-decoration: none;
 }
 
 .auth-brand-icon {

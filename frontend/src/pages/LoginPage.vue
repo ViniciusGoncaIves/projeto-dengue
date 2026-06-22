@@ -24,13 +24,11 @@
               outlined
               dense
               type="email"
+              debounce="500"
               placeholder="seu@email.com"
               prefix-icon="email"
               class="q-mt-xs"
-              :rules="[
-                (val) => !!val || 'E-mail é obrigatório',
-                (val) => /.+@.+\..+/.test(val) || 'E-mail inválido',
-              ]"
+              :rules="emailRules"
             />
           </div>
 
@@ -40,13 +38,14 @@
               v-model="form.password"
               outlined
               dense
+              debounce="500"
               :type="showPassword ? 'text' : 'password'"
               placeholder="••••••••"
               prefix-icon="lock"
               :suffix-icon="showPassword ? 'visibility_off' : 'visibility'"
               class="q-mt-xs"
               @click:append="showPassword = !showPassword"
-              :rules="[(val) => !!val || 'Senha é obrigatória']"
+              :rules="passwordRules"
             />
           </div>
 
@@ -85,6 +84,7 @@ import { http, setAuthToken } from 'src/boot/apiFetch'
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from 'src/stores/auth-store'
+import { email, required } from 'src/helpers/validation'
 
 const router = useRouter()
 const route = useRoute()
@@ -101,6 +101,8 @@ const showPassword = ref(false)
 const loading = ref(false)
 const errorMessage = ref('')
 const infoMessage = ref('')
+const emailRules = [required('E-mail é obrigatório'), email()]
+const passwordRules = [required('Senha é obrigatória')]
 
 const handleLogin = async () => {
   errorMessage.value = ''

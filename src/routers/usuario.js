@@ -29,6 +29,15 @@ module.exports = (app) => {
         */
         controller.DeleteUsuarios,
     );
+    app.post(
+        "/usuario/admin",
+        authMiddleware,
+        /*
+            #swagger.tags = ['Usuarios']
+            #swagger.security = [{ "bearerAuth": [] }]
+        */
+        controller.PostUsuarioAdmin,
+    );
     app.post("/usuario", /* #swagger.tags = ['Usuarios'] */ controller.PostUsuario);
     app.put(
         "/usuario/:id",

@@ -57,6 +57,7 @@ const routes = [
     meta: { requiresAuth: true },
     children: [
       { path: '', component: () => import('pages/DashboardPage.vue') },
+      { path: 'usuarios', component: () => import('pages/UsuariosPage.vue') },
       { path: 'denuncias/:id/editar', component: () => import('pages/ReportSitePage.vue') },
     ],
   },

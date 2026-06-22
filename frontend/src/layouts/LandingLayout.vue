@@ -2,7 +2,7 @@
   <q-layout view="hHh lpR fFf" class="landing-layout">
     <q-header class="landing-header">
       <q-toolbar class="landing-toolbar page-shell">
-        <div class="landing-brand">
+        <router-link class="landing-brand" to="/" aria-label="Ir para o início">
           <div class="brand-icon">
             <q-icon name="health_and_safety" size="20px" />
           </div>
@@ -10,7 +10,7 @@
             <div class="brand-title">Combate à Dengue</div>
             <div class="brand-subtitle">Registro comunitário de focos</div>
           </div>
-        </div>
+        </router-link>
 
         <nav class="landing-nav">
           <router-link
@@ -117,7 +117,11 @@ const isAuthenticated = computed(() => !!getAuthToken())
 const navItems = computed(() =>
   isAuthenticated.value
     ? [
+        { label: 'Início', to: '/' },
         { label: 'Painel', to: '/dashboard' },
+        ...(authStore.user?.tipo === 'ADMIN'
+          ? [{ label: 'Usuários', to: '/dashboard/usuarios' }]
+          : []),
         { label: 'Nova denúncia', to: '/report' },
       ]
     : [
@@ -182,6 +186,8 @@ const handleLogout = () => {
   display: flex;
   align-items: center;
   gap: 12px;
+  color: inherit;
+  text-decoration: none;
 }
 
 .brand-icon {

@@ -20,10 +20,11 @@
               v-model="form.fullName"
               outlined
               dense
+              debounce="500"
               placeholder="Seu nome completo"
               prefix-icon="person"
               class="q-mt-xs"
-              :rules="[(val) => !!val || 'Nome é obrigatório']"
+              :rules="nameRules"
             />
           </div>
 
@@ -34,13 +35,11 @@
               outlined
               dense
               type="email"
+              debounce="500"
               placeholder="exemplo@email.com"
               prefix-icon="email"
               class="q-mt-xs"
-              :rules="[
-                (val) => !!val || 'E-mail é obrigatório',
-                (val) => /.+@.+\..+/.test(val) || 'E-mail inválido',
-              ]"
+              :rules="emailRules"
             />
           </div>
 
@@ -50,16 +49,14 @@
               v-model="form.password"
               outlined
               dense
+              debounce="500"
               :type="showPassword ? 'text' : 'password'"
               placeholder="Mínimo 8 caracteres"
               prefix-icon="lock"
               :suffix-icon="showPassword ? 'visibility_off' : 'visibility'"
               class="q-mt-xs"
               @click:append="showPassword = !showPassword"
-              :rules="[
-                (val) => !!val || 'Senha é obrigatória',
-                (val) => val.length >= 8 || 'Mínimo 8 caracteres',
-              ]"
+              :rules="passwordRules"
             />
           </div>
 
@@ -69,16 +66,14 @@
               v-model="form.confirmPassword"
               outlined
               dense
+              debounce="500"
               :type="showConfirmPassword ? 'text' : 'password'"
               placeholder="Repita sua senha"
               prefix-icon="lock"
               :suffix-icon="showConfirmPassword ? 'visibility_off' : 'visibility'"
               class="q-mt-xs"
               @click:append="showConfirmPassword = !showConfirmPassword"
-              :rules="[
-                (val) => !!val || 'Confirmação é obrigatória',
-                (val) => val === form.password || 'Senhas não coincidem',
-              ]"
+              :rules="confirmPasswordRules"
             />
           </div>
 
@@ -111,6 +106,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { http, setAuthToken } from 'src/boot/apiFetch'
 import { useAuthStore } from 'src/stores/auth-store'
+import { email, minLength, required, sameAs } from 'src/helpers/validation'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -128,6 +124,13 @@ const showPassword = ref(false)
 const showConfirmPassword = ref(false)
 const loading = ref(false)
 const errorMessage = ref('')
+const nameRules = [required('Nome é obrigatório')]
+const emailRules = [required('E-mail é obrigatório'), email()]
+const passwordRules = [required('Senha é obrigatória'), minLength(8)]
+const confirmPasswordRules = [
+  required('Confirmação é obrigatória'),
+  sameAs(() => form.value.password, 'Senhas não coincidem'),
+]
 
 const handleRegister = async () => {
   errorMessage.value = ''

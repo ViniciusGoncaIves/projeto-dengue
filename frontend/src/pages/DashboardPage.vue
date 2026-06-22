@@ -301,6 +301,7 @@ import 'leaflet/dist/leaflet.css'
 import { useAuthStore } from 'src/stores/auth-store'
 import { useDenuncias } from 'src/composables/useDenuncias'
 import { formatLocalizacao, parseDescricaoDenuncia } from 'src/helpers/denuncia'
+import { formatDate, formatTime } from 'src/helpers/formatters'
 
 const authStore = useAuthStore()
 const { denuncias, stats, loading, error, fetchDenuncias, fetchStats, updateStatus } =
@@ -391,34 +392,29 @@ const confirmacaoMensagem = computed(() => {
   return `Você está prestes a aprovar a denúncia #${denuncia.iddenuncia}. Confirme apenas após revisar todos os detalhes.`
 })
 
-const prepararAlteracaoStatus = (denuncia, status, motivo = '') => {
-  if (!denuncia) return
-
-  acaoPendente.value = { denuncia, status, motivo }
-  confirmacaoDialog.value = true
-}
-
-const prepararRejeicao = () => {
-  if (!denunciaSelecionada.value) return
-  prepararAlteracaoStatus(denunciaSelecionada.value, 'REJEITADO', motivoRejeicao.value)
-}
-
-const confirmarAlteracaoStatus = async () => {
-  if (!acaoPendente.value) return
-
+const aplicarAlteracaoStatus = async (denuncia, status, motivo = '') => {
   alterandoStatus.value = true
   try {
-    const { denuncia, status, motivo } = acaoPendente.value
-    await updateStatus(denuncia.iddenuncia, status, motivo)
-    await carregarDados()
-
-    const denunciaAtualizada = denuncias.value.find(
-      (item) => item.iddenuncia === denuncia.iddenuncia,
-    )
-    if (denunciaAtualizada) {
-      selectedDenuncia.value = denunciaAtualizada
+    const response = await updateStatus(denuncia.iddenuncia, status, motivo)
+    const denunciaAtualizada = {
+      ...denuncia,
+      ...(response?.data || {}),
+      status,
+      motivo_rejeicao: motivo || denuncia.motivo_rejeicao,
     }
 
+    denuncias.value = denuncias.value.map((item) =>
+      item.iddenuncia === denuncia.iddenuncia ? { ...item, ...denunciaAtualizada } : item,
+    )
+
+    if (selectedDenuncia.value?.iddenuncia === denuncia.iddenuncia) {
+      selectedDenuncia.value = {
+        ...selectedDenuncia.value,
+        ...denunciaAtualizada,
+      }
+    }
+
+    await fetchStats()
     confirmacaoDialog.value = false
     rejeicaoDialog.value = false
     acaoPendente.value = null
@@ -428,11 +424,29 @@ const confirmarAlteracaoStatus = async () => {
   }
 }
 
-const formatDate = (date) =>
-  new Date(date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+const prepararAlteracaoStatus = async (denuncia, status, motivo = '') => {
+  if (!denuncia) return
 
-const formatTime = (date) =>
-  new Date(date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  if (denuncia.status === 'PENDENTE') {
+    await aplicarAlteracaoStatus(denuncia, status, motivo)
+    return
+  }
+
+  acaoPendente.value = { denuncia, status, motivo }
+  confirmacaoDialog.value = true
+}
+
+const prepararRejeicao = async () => {
+  if (!denunciaSelecionada.value) return
+  await prepararAlteracaoStatus(denunciaSelecionada.value, 'REJEITADO', motivoRejeicao.value)
+}
+
+const confirmarAlteracaoStatus = async () => {
+  if (!acaoPendente.value) return
+
+  const { denuncia, status, motivo } = acaoPendente.value
+  await aplicarAlteracaoStatus(denuncia, status, motivo)
+}
 
 const formatStatus = (status) => {
   const labels = {

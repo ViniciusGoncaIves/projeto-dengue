@@ -40,7 +40,7 @@
               type="number"
               step="0.000001"
               label="Latitude"
-              :rules="[(val) => val !== null && val !== '' || 'Latitude obrigatória']"
+              :rules="latitudeRules"
               @update:model-value="syncMapFromInputs"
             />
             <q-input
@@ -50,7 +50,7 @@
               type="number"
               step="0.000001"
               label="Longitude"
-              :rules="[(val) => val !== null && val !== '' || 'Longitude obrigatória']"
+              :rules="longitudeRules"
               @update:model-value="syncMapFromInputs"
             />
           </div>
@@ -84,7 +84,7 @@
               outlined
               dense
               label="Tipo de foco"
-              :rules="[(val) => !!val || 'Tipo obrigatório']"
+              :rules="tipoRules"
             />
             <q-select
               v-model="form.urgencia"
@@ -92,7 +92,7 @@
               outlined
               dense
               label="Urgência"
-              :rules="[(val) => !!val || 'Urgência obrigatória']"
+              :rules="urgenciaRules"
             />
           </div>
           <q-input
@@ -101,7 +101,7 @@
             type="textarea"
             label="Detalhes"
             placeholder="Descreva o foco e como ele pode ser encontrado"
-            :rules="[(val) => !!val?.trim() || 'Descrição obrigatória']"
+            :rules="detalhesRules"
           />
         </div>
 
@@ -161,6 +161,7 @@ import 'leaflet/dist/leaflet.css'
 import { getAuthToken } from 'src/boot/apiFetch'
 import { useDenuncias } from 'src/composables/useDenuncias'
 import { formatDescricaoDenuncia, parseDescricaoDenuncia } from 'src/helpers/denuncia'
+import { required } from 'src/helpers/validation'
 import { useRoute, useRouter } from 'vue-router'
 
 const DEFAULT_LOCATION = [-26.8495, -52.9913]
@@ -193,6 +194,11 @@ const form = ref({
 
 const tipos = ['Água parada', 'Pneu com água', 'Vaso de planta', "Caixa d'água aberta", 'Outro']
 const urgencias = ['Baixa', 'Média', 'Alta']
+const latitudeRules = [required('Latitude obrigatória')]
+const longitudeRules = [required('Longitude obrigatória')]
+const tipoRules = [required('Tipo obrigatório')]
+const urgenciaRules = [required('Urgência obrigatória')]
+const detalhesRules = [required('Descrição obrigatória')]
 
 const { createDenuncia, fetchDenunciaById, updateDenuncia } = useDenuncias()
 
@@ -387,7 +393,7 @@ const buildPayload = () => {
   return payload
 }
 
-const resetForm = () => {
+const resetForm = async () => {
   form.value = {
     endereco: '',
     latitude: DEFAULT_LOCATION[0],
@@ -399,6 +405,7 @@ const resetForm = () => {
   }
   files.value = []
   setPoint(DEFAULT_LOCATION[0], DEFAULT_LOCATION[1])
+  await nextTick()
   formRef.value?.resetValidation()
 }
 
@@ -418,7 +425,7 @@ const handleSubmit = async () => {
     } else {
       await createDenuncia(buildPayload(), { isFormData: true, skipAuth: form.value.anonimo })
       successMessage.value = 'Denúncia enviada com sucesso.'
-      resetForm()
+      await resetForm()
     }
   } catch (err) {
     errorMessage.value = err?.message || 'Erro ao salvar denúncia.'
